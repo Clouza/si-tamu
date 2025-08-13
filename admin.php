@@ -2,10 +2,15 @@
 session_start();
 require_once 'database.php';
 
-// Simple authentication check
-if (!isset($_SESSION['admin_logged_in'])) {
+// Authentication and role check
+if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_role'] !== 'admin') {
     header('Location: login.php');
     exit;
+}
+
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $error = '';
@@ -15,50 +20,61 @@ $entry_id = $_GET['id'] ?? '';
 
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['add_entry'])) {
-        // Add new guest entry
-        $visitor_name = trim($_POST['nama']);
-        $ktp_number = trim($_POST['noktp']);
-        $institution = trim($_POST['instansi']);
-        $job = trim($_POST['pekerjaan']);
-        $required_info = trim($_POST['informasi']);
-        $legal_product_purpose = trim($_POST['tujuan']);
-        
-        if (empty($visitor_name) || empty($ktp_number) || empty($institution) || 
-            empty($job) || empty($required_info) || empty($legal_product_purpose)) {
-            $error = "Semua field harus diisi!";
-        } else {
+    // CSRF token validation
+    if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'] ?? '')) {
+        $error = 'Invalid security token!';
+    } else {
+        if (isset($_POST['add_entry'])) {
+            // Add new guest entry
+            $visitor_name = trim($_POST['nama']);
+            $ktp_number = trim($_POST['noktp']);
+            $institution = trim($_POST['instansi']);
+            $job = trim($_POST['pekerjaan']);
+            $required_info = trim($_POST['informasi']);
+            $legal_product_purpose = trim($_POST['tujuan']);
+            
+            if (empty($visitor_name) || empty($ktp_number) || empty($institution) || 
+                empty($job) || empty($required_info) || empty($legal_product_purpose)) {
+                $error = "Semua field harus diisi!";
+            } elseif (strlen($ktp_number) < 10) {
+                $error = "Nomor KTP tidak valid!";
+            } else {
+                try {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO guest_entries (visitor_name, ktp_number, institution, job, required_info, legal_product_purpose) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([$visitor_name, $ktp_number, $institution, $job, $required_info, $legal_product_purpose]);
+                    $success = "Data buku tamu berhasil ditambahkan!";
+                } catch (PDOException $e) {
+                    if (strpos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
+                        $error = "Data dengan KTP tersebut sudah terdaftar!";
+                    } else {
+                        $error = "Terjadi kesalahan sistem!";
+                    }
+                }
+            }
+        } elseif (isset($_POST['update_entry'])) {
+            // Update existing entry
+            $id = $_POST['id'];
+            $visitor_name = trim($_POST['nama']);
+            $ktp_number = trim($_POST['noktp']);
+            $institution = trim($_POST['instansi']);
+            $job = trim($_POST['pekerjaan']);
+            $required_info = trim($_POST['informasi']);
+            $legal_product_purpose = trim($_POST['tujuan']);
+            
             try {
                 $stmt = $pdo->prepare("
-                    INSERT INTO guest_entries (visitor_name, ktp_number, institution, job, required_info, legal_product_purpose) 
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    UPDATE guest_entries 
+                    SET visitor_name = ?, ktp_number = ?, institution = ?, job = ?, required_info = ?, legal_product_purpose = ? 
+                    WHERE id = ?
                 ");
-                $stmt->execute([$visitor_name, $ktp_number, $institution, $job, $required_info, $legal_product_purpose]);
-                $success = "Data buku tamu berhasil ditambahkan!";
+                $stmt->execute([$visitor_name, $ktp_number, $institution, $job, $required_info, $legal_product_purpose, $id]);
+                $success = "Data berhasil diperbarui!";
             } catch (PDOException $e) {
                 $error = "Terjadi kesalahan: " . $e->getMessage();
             }
-        }
-    } elseif (isset($_POST['update_entry'])) {
-        // Update existing entry
-        $id = $_POST['id'];
-        $visitor_name = trim($_POST['nama']);
-        $ktp_number = trim($_POST['noktp']);
-        $institution = trim($_POST['instansi']);
-        $job = trim($_POST['pekerjaan']);
-        $required_info = trim($_POST['informasi']);
-        $legal_product_purpose = trim($_POST['tujuan']);
-        
-        try {
-            $stmt = $pdo->prepare("
-                UPDATE guest_entries 
-                SET visitor_name = ?, ktp_number = ?, institution = ?, job = ?, required_info = ?, legal_product_purpose = ? 
-                WHERE id = ?
-            ");
-            $stmt->execute([$visitor_name, $ktp_number, $institution, $job, $required_info, $legal_product_purpose, $id]);
-            $success = "Data berhasil diperbarui!";
-        } catch (PDOException $e) {
-            $error = "Terjadi kesalahan: " . $e->getMessage();
         }
     }
 }
@@ -133,17 +149,16 @@ if (isset($_GET['logout'])) {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SI-TAMU - Admin Dashboard</title>
-
-    <link href="asset/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,900" rel="stylesheet">
-    <link href="assets/css/sb-admin-2.min.css" rel="stylesheet">
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
         /* Background gradasi animasi */
         body {
@@ -169,12 +184,12 @@ if (isset($_GET['logout'])) {
         }
 
         /* Efek glow berkedip saat hover/focus */
-        .form-control-user {
+        .input-glow {
             transition: all 0.3s ease;
         }
 
-        .form-control-user:hover,
-        .form-control-user:focus {
+        .input-glow:hover,
+        .input-glow:focus {
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
             animation: blinkGlow 1s infinite alternate;
             border: 2px solid #fff;
@@ -188,10 +203,7 @@ if (isset($_GET['logout'])) {
         /* Tombol submit animasi hover */
         .btn-animated {
             background: linear-gradient(90deg, #1a73e8, #0f9d58);
-            border: none;
             transition: all 0.4s ease;
-            color: white;
-            font-weight: bold;
         }
 
         .btn-animated:hover {
@@ -201,240 +213,218 @@ if (isset($_GET['logout'])) {
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #1a73e8;
-        }
-
-        .entries-list {
-            max-height: 400px;
-            overflow-y: auto;
+            transform: translateY(-2px);
         }
 
         .entry-item {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-left: 4px solid #1a73e8;
-        }
-
-        .entry-item:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: translateX(5px);
             transition: all 0.3s ease;
         }
 
-        .admin-header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
+        .entry-item:hover {
+            transform: translateX(2px);
         }
     </style>
 </head>
 
-<body>
-    <div class="container">
+<body class="font-nunito">
+    <div class="container mx-auto px-4">
         <!-- Admin Header -->
-        <div class="admin-header mt-4 text-center">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <img src="assets/img/logo.png.png" width="80" alt="Logo">
-                </div>
-                <div class="col-md-4">
-                    <h2 class="mb-0">SI-TAMU Admin</h2>
-                    <p class="text-muted mb-0">PROVINSI BALI</p>
-                </div>
-                <div class="col-md-4">
-                    <div class="text-right">
-                        <span class="mr-3">Welcome, <?= htmlspecialchars($_SESSION['admin_nip']) ?></span>
-                        <a href="?logout=1" class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+        <div class="card bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-lg mt-8 mb-6">
+            <div class="p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <img src="assets/img/logo.png.png" width="60" alt="Logo" class="animate-pulse">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">SI-TAMU Admin</h2>
+                            <p class="text-sm text-gray-600">PROVINSI BALI</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-700">Welcome, <strong><?= htmlspecialchars($_SESSION['user_nip']) ?></strong></span>
+                        <a href="user.php" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
+                            <i class="fas fa-eye mr-1"></i>User View
+                        </a>
+                        <a href="?logout=1" class="px-3 py-1 bg-red-500 text-white rounded-full text-sm hover:bg-red-600 transition">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Logout
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Left Column - Form -->
-            <div class="col-lg-7 mb-3">
-                <div class="card shadow bg-gradient-light">
-                    <div class="card-body">
-                        <div class="p-4">
-                            <div class="text-center">
-                                <h1 class="h4 text-gray-900 mb-4">
-                                    <?= $edit_entry ? 'Edit Data Buku Tamu' : 'Tambah Data Buku Tamu' ?>
-                                </h1>
-                            </div>
-                            
-                            <?php if ($error): ?>
-                                <div class="alert alert-danger" role="alert">
-                                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                                    <?= htmlspecialchars($error) ?>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if ($success): ?>
-                                <div class="alert alert-success" role="alert">
-                                    <i class="fas fa-check-circle mr-2"></i>
-                                    <?= htmlspecialchars($success) ?>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <form class="user" action="" method="POST">
-                                <?php if ($edit_entry): ?>
-                                    <input type="hidden" name="id" value="<?= $edit_entry['id'] ?>">
-                                <?php endif; ?>
-                                
-                                <div class="form-group">
-                                    <input type="text" class="form-control form-control-user" name="nama" 
-                                           placeholder="Nama Pengunjung" 
-                                           value="<?= $edit_entry ? htmlspecialchars($edit_entry['visitor_name']) : '' ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" class="form-control form-control-user" name="noktp" 
-                                           placeholder="Nomor KTP" 
-                                           value="<?= $edit_entry ? htmlspecialchars($edit_entry['ktp_number']) : '' ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" class="form-control form-control-user" name="instansi" 
-                                           placeholder="Instansi" 
-                                           value="<?= $edit_entry ? htmlspecialchars($edit_entry['institution']) : '' ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" class="form-control form-control-user" name="pekerjaan" 
-                                           placeholder="Pekerjaan" 
-                                           value="<?= $edit_entry ? htmlspecialchars($edit_entry['job']) : '' ?>" required>
-                                </div>
-                                <div class="form-group">
-                                    <textarea class="form-control form-control-user" name="informasi" 
-                                              placeholder="Informasi yang Dibutuhkan" rows="3" required><?= $edit_entry ? htmlspecialchars($edit_entry['required_info']) : '' ?></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <textarea class="form-control form-control-user" name="tujuan" 
-                                              placeholder="Tujuan Memperoleh Informasi Produk Hukum" rows="3" required><?= $edit_entry ? htmlspecialchars($edit_entry['legal_product_purpose']) : '' ?></textarea>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <button type="submit" name="<?= $edit_entry ? 'update_entry' : 'add_entry' ?>" 
-                                            class="btn btn-animated btn-user btn-block">
-                                        <i class="fas fa-<?= $edit_entry ? 'edit' : 'plus' ?> mr-2"></i>
-                                        <?= $edit_entry ? 'Update Data' : 'Simpan Data' ?>
-                                    </button>
-                                    
-                                    <?php if ($edit_entry): ?>
-                                        <a href="admin.php" class="btn btn-secondary btn-user btn-block mt-2">
-                                            <i class="fas fa-times mr-2"></i>Batal Edit
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </form>
-
-                            <div class="text-center mt-3">
-                                <a href="user.php" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye mr-1"></i>Lihat Halaman User
-                                </a>
-                            </div>
+            <div class="lg:col-span-7">
+                <div class="card bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-lg">
+                    <div class="p-6">
+                        <div class="text-center mb-6">
+                            <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                                <?= $edit_entry ? 'Edit Data Buku Tamu' : 'Tambah Data Buku Tamu' ?>
+                            </h1>
                         </div>
+                        
+                        <?php if ($error): ?>
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                                <div class="flex">
+                                    <i class="fas fa-exclamation-triangle mr-2 mt-1"></i>
+                                    <span><?= htmlspecialchars($error) ?></span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if ($success): ?>
+                            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+                                <div class="flex">
+                                    <i class="fas fa-check-circle mr-2 mt-1"></i>
+                                    <span><?= htmlspecialchars($success) ?></span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <form action="" method="POST" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                            <?php if ($edit_entry): ?>
+                                <input type="hidden" name="id" value="<?= $edit_entry['id'] ?>">
+                            <?php endif; ?>
+                            
+                            <div>
+                                <input type="text" name="nama" 
+                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                       placeholder="Nama Pengunjung" 
+                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['visitor_name']) : '' ?>" required>
+                            </div>
+                            <div>
+                                <input type="text" name="noktp" 
+                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                       placeholder="Nomor KTP" 
+                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['ktp_number']) : '' ?>" required>
+                            </div>
+                            <div>
+                                <input type="text" name="instansi" 
+                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                       placeholder="Instansi" 
+                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['institution']) : '' ?>" required>
+                            </div>
+                            <div>
+                                <input type="text" name="pekerjaan" 
+                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                       placeholder="Pekerjaan" 
+                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['job']) : '' ?>" required>
+                            </div>
+                            <div>
+                                <textarea name="informasi" rows="3"
+                                          class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                          placeholder="Informasi yang Dibutuhkan" required><?= $edit_entry ? htmlspecialchars($edit_entry['required_info']) : '' ?></textarea>
+                            </div>
+                            <div>
+                                <textarea name="tujuan" rows="3"
+                                          class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                          placeholder="Tujuan Memperoleh Informasi Produk Hukum" required><?= $edit_entry ? htmlspecialchars($edit_entry['legal_product_purpose']) : '' ?></textarea>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <button type="submit" name="<?= $edit_entry ? 'update_entry' : 'add_entry' ?>" 
+                                        class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
+                                    <i class="fas fa-<?= $edit_entry ? 'edit' : 'plus' ?> mr-2"></i>
+                                    <?= $edit_entry ? 'Update Data' : 'Simpan Data' ?>
+                                </button>
+                                
+                                <?php if ($edit_entry): ?>
+                                    <a href="admin.php" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-full transition duration-300 text-center block">
+                                        <i class="fas fa-times mr-2"></i>Batal Edit
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column - Statistics and Data -->
-            <div class="col-lg-5 mb-3">
+            <!-- Right Column - Statistics -->
+            <div class="lg:col-span-5 space-y-4">
                 <!-- Today's Statistics -->
-                <div class="stat-card text-center">
-                    <div class="stat-number"><?= $today_count ?? 0 ?></div>
-                    <div class="text-muted">Pengunjung Hari Ini</div>
-                    <small class="text-muted"><?= date('d F Y') ?></small>
+                <div class="stat-card bg-white bg-opacity-95 rounded-lg shadow-lg p-6 text-center">
+                    <div class="text-4xl font-bold text-blue-600"><?= $today_count ?? 0 ?></div>
+                    <div class="text-gray-600 font-medium">Pengunjung Hari Ini</div>
+                    <div class="text-sm text-gray-500 mt-1"><?= date('d F Y') ?></div>
                 </div>
 
                 <!-- 7 Days Statistics -->
-                <div class="stat-card">
-                    <h6 class="font-weight-bold mb-3">
-                        <i class="fas fa-chart-line mr-2"></i>7 Hari Terakhir
+                <div class="stat-card bg-white bg-opacity-95 rounded-lg shadow-lg p-6">
+                    <h6 class="font-bold mb-4 text-gray-800">
+                        <i class="fas fa-chart-line mr-2 text-blue-600"></i>7 Hari Terakhir
                     </h6>
-                    <?php foreach ($last_7_days as $day): ?>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <strong><?= $day['short_date'] ?></strong>
-                                <small class="text-muted ml-1"><?= $day['day'] ?></small>
+                    <div class="space-y-2">
+                        <?php foreach ($last_7_days as $day): ?>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="font-semibold"><?= $day['short_date'] ?></span>
+                                    <span class="text-sm text-gray-500 ml-1"><?= substr($day['day'], 0, 3) ?></span>
+                                </div>
+                                <div class="px-2 py-1 rounded-full text-xs font-semibold <?= $day['count'] > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600' ?>">
+                                    <?= $day['count'] ?>
+                                </div>
                             </div>
-                            <div class="badge badge-<?= $day['count'] > 0 ? 'primary' : 'secondary' ?>">
-                                <?= $day['count'] ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
 
                 <!-- Total Statistics -->
-                <div class="stat-card text-center">
-                    <div class="stat-number"><?= $total_entries ?? 0 ?></div>
-                    <div class="text-muted">Total Pengunjung</div>
+                <div class="stat-card bg-white bg-opacity-95 rounded-lg shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600"><?= $total_entries ?? 0 ?></div>
+                    <div class="text-gray-600 font-medium">Total Pengunjung</div>
                 </div>
 
                 <!-- Recent Entries -->
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="font-weight-bold mb-0">
-                            <i class="fas fa-list mr-2"></i>Data Terbaru
+                <div class="stat-card bg-white bg-opacity-95 rounded-lg shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h6 class="font-bold text-gray-800">
+                            <i class="fas fa-list mr-2 text-blue-600"></i>Data Terbaru
                         </h6>
                         <?php if (!isset($_GET['show_all'])): ?>
-                            <a href="?show_all=1" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye mr-1"></i>Lihat Semua
+                            <a href="?show_all=1" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
+                                <i class="fas fa-eye mr-1"></i>Semua
                             </a>
                         <?php else: ?>
-                            <a href="admin.php" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-eye-slash mr-1"></i>Sembunyikan
+                            <a href="admin.php" class="px-3 py-1 bg-gray-500 text-white rounded-full text-sm hover:bg-gray-600 transition">
+                                <i class="fas fa-eye-slash mr-1"></i>Tutup
                             </a>
                         <?php endif; ?>
                     </div>
                     
-                    <div class="entries-list">
+                    <div class="max-h-80 overflow-y-auto space-y-3">
                         <?php if (empty($recent_entries)): ?>
-                            <div class="entry-item text-center text-muted">
+                            <div class="text-center text-gray-500 py-8">
                                 <i class="fas fa-inbox fa-2x mb-2"></i>
                                 <p>Belum ada data pengunjung</p>
                             </div>
                         <?php else: ?>
                             <?php foreach ($recent_entries as $entry): ?>
-                                <div class="entry-item">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1">
-                                            <strong><?= htmlspecialchars($entry['visitor_name']) ?></strong>
-                                            <div class="small text-muted">
+                                <div class="entry-item bg-gray-50 rounded-lg p-3 border-l-4 border-blue-500">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-gray-800"><?= htmlspecialchars($entry['visitor_name']) ?></div>
+                                            <div class="text-sm text-gray-600">
                                                 <i class="fas fa-building mr-1"></i><?= htmlspecialchars($entry['institution']) ?>
                                             </div>
-                                            <div class="small text-muted">
+                                            <div class="text-xs text-gray-500 mt-1">
                                                 <i class="fas fa-clock mr-1"></i><?= date('d/m/Y H:i', strtotime($entry['created_at'])) ?>
                                             </div>
                                         </div>
-                                        <div class="btn-group-vertical btn-group-sm">
+                                        <div class="flex space-x-1 ml-2">
                                             <a href="?action=edit&id=<?= $entry['id'] ?>" 
-                                               class="btn btn-outline-primary btn-sm" title="Edit">
-                                                <i class="fas fa-edit"></i>
+                                               class="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition" title="Edit">
+                                                <i class="fas fa-edit text-xs"></i>
                                             </a>
                                             <a href="?action=delete&id=<?= $entry['id'] ?>" 
-                                               class="btn btn-outline-danger btn-sm" title="Delete"
+                                               class="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition" title="Delete"
                                                onclick="return confirm('Yakin ingin menghapus data ini?')">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash text-xs"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -447,16 +437,9 @@ if (isset($_GET['logout'])) {
         </div>
         
         <!-- Footer -->
-        <div class="text-center text-white mt-4 mb-3">
+        <div class="text-center text-white mt-8 mb-4">
             <small>By.JDIH Prov Bali | 2025 - <?= date('Y') ?></small>
         </div>
     </div>
-
-    <!-- Bootstrap core JavaScript-->
-    <script src="assets/vendor/jquery/jquery.min.js"></script>
-    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="assets/js/sb-admin-2.min.js"></script>
-
 </body>
 </html>

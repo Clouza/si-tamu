@@ -1,25 +1,37 @@
 <?php
 require_once 'database.php';
 
-// Admin user data
-$admin_nip = 'admin123';
-$admin_password = password_hash('admin123', PASSWORD_DEFAULT);
-$admin_role = 'admin';
+// User data
+$users = [
+    [
+        'nip' => 'admin123',
+        'password' => 'admin123',
+        'role' => 'admin'
+    ],
+    [
+        'nip' => 'user123',
+        'password' => 'user123',
+        'role' => 'user'
+    ]
+];
 
 try {
-    // Check if admin already exists
-    $check = $pdo->prepare("SELECT COUNT(*) FROM users WHERE nip = ?");
-    $check->execute([$admin_nip]);
-    
-    if ($check->fetchColumn() == 0) {
-        // Insert admin user
-        $stmt = $pdo->prepare("INSERT INTO users (nip, password, role) VALUES (?, ?, ?)");
-        $stmt->execute([$admin_nip, $admin_password, $admin_role]);
-        echo "Admin user created successfully!\n";
-        echo "NIP: admin123\n";
-        echo "Password: admin123\n";
-    } else {
-        echo "Admin user already exists!\n";
+    foreach ($users as $user) {
+        // Check if user already exists
+        $check = $pdo->prepare("SELECT COUNT(*) FROM users WHERE nip = ?");
+        $check->execute([$user['nip']]);
+        
+        if ($check->fetchColumn() == 0) {
+            // Insert user
+            $hashed_password = password_hash($user['password'], PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (nip, password, role) VALUES (?, ?, ?)");
+            $stmt->execute([$user['nip'], $hashed_password, $user['role']]);
+            echo ucfirst($user['role']) . " user created successfully!\n";
+            echo "NIP: " . $user['nip'] . "\n";
+            echo "Password: " . $user['password'] . "\n\n";
+        } else {
+            echo ucfirst($user['role']) . " user already exists!\n";
+        }
     }
     
     // Sample guest entries for testing

@@ -1,5 +1,24 @@
 <?php
+session_start();
 require_once 'database.php';
+
+// Check if user is logged in and show appropriate greeting
+$logged_in_user = null;
+if (isset($_SESSION['user_logged_in'])) {
+    $logged_in_user = $_SESSION['user_nip'];
+}
+
+// Show login success message
+if (isset($_GET['logged_in']) && $_GET['logged_in'] == '1' && $logged_in_user) {
+    $login_success = "Selamat datang, " . htmlspecialchars($logged_in_user) . "!";
+}
+
+// Handle logout
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: user.php');
+    exit;
+}
 
 $error = '';
 $success = '';
@@ -11,10 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $job = trim($_POST['pekerjaan']);
     $required_info = trim($_POST['informasi']);
     $legal_product_purpose = trim($_POST['tujuan']);
-    
+
     // Validation
-    if (empty($visitor_name) || empty($ktp_number) || empty($institution) || 
-        empty($job) || empty($required_info) || empty($legal_product_purpose)) {
+    if (
+        empty($visitor_name) || empty($ktp_number) || empty($institution) ||
+        empty($job) || empty($required_info) || empty($legal_product_purpose)
+    ) {
         $error = "Semua field harus diisi!";
     } elseif (strlen($ktp_number) < 10) {
         $error = "Nomor KTP tidak valid!";
@@ -26,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 INSERT INTO guest_entries (visitor_name, ktp_number, institution, job, required_info, legal_product_purpose) 
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
-            
+
             $stmt->execute([
                 $visitor_name,
                 $ktp_number,
@@ -35,12 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $required_info,
                 $legal_product_purpose
             ]);
-            
+
             $success = "Data buku tamu berhasil disimpan! Terima kasih atas kunjungan Anda.";
-            
+
             // Clear form data after successful submission
             $visitor_name = $ktp_number = $institution = $job = $required_info = $legal_product_purpose = '';
-            
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
                 $error = "Data dengan KTP tersebut sudah terdaftar!";
@@ -74,9 +94,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         /* Animasi form muncul */
@@ -85,8 +113,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes fadeInUp {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Efek glow berkedip saat hover/focus */
@@ -102,8 +137,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes blinkGlow {
-            from { box-shadow: 0 0 5px #fff; }
-            to { box-shadow: 0 0 15px #ffeb3b; }
+            from {
+                box-shadow: 0 0 5px #fff;
+            }
+
+            to {
+                box-shadow: 0 0 15px #ffeb3b;
+            }
         }
 
         /* Tombol submit animasi hover */
@@ -130,6 +170,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="head text-center mt-4 text-white">
             <img src="assets/img/logo.png.png" width="100" alt="Logo" style="animation: fadeInUp 1s ease;">
             <h2 class="mt-2">SI-TAMU <br> PROVINSI BALI</h2>
+            <?php if ($logged_in_user): ?>
+                <div class="mt-3">
+                    <span class="bg-opacity-20 px-4 py-2 rounded-full text-sm" style="background-color: black; border-radius: 6px;">
+                        <i class="fas fa-user mr-2"></i><?= htmlspecialchars($logged_in_user) ?>
+                        <a href="?logout=1" class="ml-2 text-red-200 hover:text-white">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </span>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="row mt-4">
@@ -141,21 +191,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="text-center">
                                 <h1 class="h4 text-gray-900 mb-4">Form Buku Tamu</h1>
                             </div>
-                            
+
+                            <?php if (isset($login_success)): ?>
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <?= htmlspecialchars($login_success) ?>
+                                </div>
+                            <?php endif; ?>
+
                             <?php if ($error): ?>
                                 <div class="alert alert-danger" role="alert">
                                     <i class="fas fa-exclamation-triangle mr-2"></i>
                                     <?= htmlspecialchars($error) ?>
                                 </div>
                             <?php endif; ?>
-                            
+
                             <?php if ($success): ?>
                                 <div class="alert alert-success" role="alert">
                                     <i class="fas fa-check-circle mr-2"></i>
                                     <?= htmlspecialchars($success) ?>
                                 </div>
                             <?php endif; ?>
-                            
+
                             <form class="user" action="" method="POST">
                                 <div class="form-group">
                                     <input type="text" class="form-control form-control-user" name="nama" placeholder="Nama Pengunjung" value="<?= isset($visitor_name) ? htmlspecialchars($visitor_name) : '' ?>" required>
@@ -177,9 +234,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <button type="submit" class="btn btn-animated btn-user btn-block">
                                     Simpan Buku Tamu
-                                <div class="text-center">
-                                  <a class="small" href="#">By.JDIH Prov Bali | 2025 - <?=date('Y') ?></a>
-                                </div>
+                                    <div class="text-center">
+                                        <a class="small" href="#">By.JDIH Prov Bali | 2025 - <?= date('Y') ?></a>
+                                    </div>
                                 </button>
                             </form>
                         </div>
@@ -193,19 +250,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="card-body">
                         <h5 class="text-center font-weight-bold">Informasi</h5>
                         <p class="mb-3 text-justify">
-                            Selamat datang di layanan buku tamu Provinsi Bali. Silakan isi data dengan benar untuk keperluan administrasi. 
-                            Data Anda akan digunakan sesuai ketentuan yang berlaku. 
+                            Selamat datang di layanan buku tamu Provinsi Bali. Silakan isi data dengan benar untuk keperluan administrasi.
+                            Data Anda akan digunakan sesuai ketentuan yang berlaku.
                             Kami berkomitmen menjaga kerahasiaan informasi Anda.
                         </p>
-                        
+
                         <div class="text-center">
                             <div class="btn-group-vertical" role="group">
-                                <a href="admin.php" class="btn btn-outline-primary btn-sm mb-2">
-                                    <i class="fas fa-list mr-1"></i>Lihat Data Buku Tamu
-                                </a>
-                                <a href="login.php" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-sign-in-alt mr-1"></i>Login Admin
-                                </a>
+                                <?php if ($logged_in_user): ?>
+                                    <?php if ($_SESSION['user_role'] === 'admin'): ?>
+                                        <a href="admin.php" class="btn btn-outline-primary btn-sm mb-2">
+                                            <i class="fas fa-tachometer-alt mr-1"></i>Dashboard Admin
+                                        </a>
+                                    <?php endif; ?>
+                                    <a href="?logout=1" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                                    </a>
+                                <?php else: ?>
+                                    <a href="admin.php" class="btn btn-outline-primary btn-sm mb-2">
+                                        <i class="fas fa-list mr-1"></i>Lihat Data Buku Tamu
+                                    </a>
+                                    <a href="login.php" class="btn btn-outline-secondary btn-sm mb-2">
+                                        <i class="fas fa-sign-in-alt mr-1"></i>Login
+                                    </a>
+                                    <a href="register.php" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-user-plus mr-1"></i>Daftar Admin
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -221,4 +292,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="assets/js/sb-admin-2.min.js"></script>
 
 </body>
+
 </html>

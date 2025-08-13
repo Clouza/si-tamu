@@ -2,9 +2,13 @@
 session_start();
 require_once 'database.php';
 
-// Redirect if already logged in
-if (isset($_SESSION['admin_logged_in'])) {
-    header('Location: admin.php');
+// Redirect if already logged in based on role
+if (isset($_SESSION['user_logged_in'])) {
+    if ($_SESSION['user_role'] === 'admin') {
+        header('Location: admin.php');
+    } else {
+        header('Location: user.php');
+    }
     exit;
 }
 
@@ -24,10 +28,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
             
             if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_nip'] = $user['nip'];
-                $_SESSION['admin_role'] = $user['role'];
-                header('Location: admin.php');
+                $_SESSION['user_logged_in'] = true;
+                $_SESSION['user_nip'] = $user['nip'];
+                $_SESSION['user_role'] = $user['role'];
+                
+                // Role-based redirect
+                if ($user['role'] === 'admin') {
+                    header('Location: admin.php');
+                } else {
+                    header('Location: user.php?logged_in=1');
+                }
                 exit;
             } else {
                 $error = 'NIP atau password salah!';
