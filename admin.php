@@ -32,9 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $job = trim($_POST['pekerjaan']);
             $required_info = trim($_POST['informasi']);
             $legal_product_purpose = trim($_POST['tujuan']);
-            
-            if (empty($visitor_name) || empty($ktp_number) || empty($institution) || 
-                empty($job) || empty($required_info) || empty($legal_product_purpose)) {
+
+            if (
+                empty($visitor_name) || empty($ktp_number) || empty($institution) ||
+                empty($job) || empty($required_info) || empty($legal_product_purpose)
+            ) {
                 $error = "Semua field harus diisi!";
             } elseif (strlen($ktp_number) < 10) {
                 $error = "Nomor KTP tidak valid!";
@@ -63,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $job = trim($_POST['pekerjaan']);
             $required_info = trim($_POST['informasi']);
             $legal_product_purpose = trim($_POST['tujuan']);
-            
+
             try {
                 $stmt = $pdo->prepare("
                     UPDATE guest_entries 
@@ -122,7 +124,6 @@ try {
     // Total entries
     $stmt = $pdo->query("SELECT COUNT(*) FROM guest_entries");
     $total_entries = $stmt->fetchColumn();
-
 } catch (PDOException $e) {
     $error = "Error fetching statistics: " . $e->getMessage();
 }
@@ -149,16 +150,17 @@ if (isset($_GET['logout'])) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SI-TAMU - Admin Dashboard</title>
-    
+
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,900" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
     <style>
         /* Background gradasi animasi */
         body {
@@ -168,9 +170,17 @@ if (isset($_GET['logout'])) {
         }
 
         @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         /* Animasi form muncul */
@@ -179,8 +189,15 @@ if (isset($_GET['logout'])) {
         }
 
         @keyframes fadeInUp {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Efek glow berkedip saat hover/focus */
@@ -196,8 +213,13 @@ if (isset($_GET['logout'])) {
         }
 
         @keyframes blinkGlow {
-            from { box-shadow: 0 0 5px #fff; }
-            to { box-shadow: 0 0 15px #ffeb3b; }
+            from {
+                box-shadow: 0 0 5px #fff;
+            }
+
+            to {
+                box-shadow: 0 0 15px #ffeb3b;
+            }
         }
 
         /* Tombol submit animasi hover */
@@ -246,7 +268,7 @@ if (isset($_GET['logout'])) {
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm text-gray-700">Welcome, <strong><?= htmlspecialchars($_SESSION['user_nip']) ?></strong></span>
-                        <a href="user.php" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
+                        <a href="index.php" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
                             <i class="fas fa-eye mr-1"></i>User View
                         </a>
                         <a href="?logout=1" class="px-3 py-1 bg-red-500 text-white rounded-full text-sm hover:bg-red-600 transition">
@@ -267,7 +289,7 @@ if (isset($_GET['logout'])) {
                                 <?= $edit_entry ? 'Edit Data Buku Tamu' : 'Tambah Data Buku Tamu' ?>
                             </h1>
                         </div>
-                        
+
                         <?php if ($error): ?>
                             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
                                 <div class="flex">
@@ -276,7 +298,7 @@ if (isset($_GET['logout'])) {
                                 </div>
                             </div>
                         <?php endif; ?>
-                        
+
                         <?php if ($success): ?>
                             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
                                 <div class="flex">
@@ -285,55 +307,55 @@ if (isset($_GET['logout'])) {
                                 </div>
                             </div>
                         <?php endif; ?>
-                        
+
                         <form action="" method="POST" class="space-y-4">
                             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                             <?php if ($edit_entry): ?>
                                 <input type="hidden" name="id" value="<?= $edit_entry['id'] ?>">
                             <?php endif; ?>
-                            
+
                             <div>
-                                <input type="text" name="nama" 
-                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                       placeholder="Nama Pengunjung" 
-                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['visitor_name']) : '' ?>" required>
+                                <input type="text" name="nama"
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Nama Pengunjung"
+                                    value="<?= $edit_entry ? htmlspecialchars($edit_entry['visitor_name']) : '' ?>" required>
                             </div>
                             <div>
-                                <input type="text" name="noktp" 
-                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                       placeholder="Nomor KTP" 
-                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['ktp_number']) : '' ?>" required>
+                                <input type="text" name="noktp"
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Nomor KTP"
+                                    value="<?= $edit_entry ? htmlspecialchars($edit_entry['ktp_number']) : '' ?>" required>
                             </div>
                             <div>
-                                <input type="text" name="instansi" 
-                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                       placeholder="Instansi" 
-                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['institution']) : '' ?>" required>
+                                <input type="text" name="instansi"
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Instansi"
+                                    value="<?= $edit_entry ? htmlspecialchars($edit_entry['institution']) : '' ?>" required>
                             </div>
                             <div>
-                                <input type="text" name="pekerjaan" 
-                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                       placeholder="Pekerjaan" 
-                                       value="<?= $edit_entry ? htmlspecialchars($edit_entry['job']) : '' ?>" required>
+                                <input type="text" name="pekerjaan"
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Pekerjaan"
+                                    value="<?= $edit_entry ? htmlspecialchars($edit_entry['job']) : '' ?>" required>
                             </div>
                             <div>
                                 <textarea name="informasi" rows="3"
-                                          class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                          placeholder="Informasi yang Dibutuhkan" required><?= $edit_entry ? htmlspecialchars($edit_entry['required_info']) : '' ?></textarea>
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Informasi yang Dibutuhkan" required><?= $edit_entry ? htmlspecialchars($edit_entry['required_info']) : '' ?></textarea>
                             </div>
                             <div>
                                 <textarea name="tujuan" rows="3"
-                                          class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                          placeholder="Tujuan Memperoleh Informasi Produk Hukum" required><?= $edit_entry ? htmlspecialchars($edit_entry['legal_product_purpose']) : '' ?></textarea>
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Tujuan Memperoleh Informasi Produk Hukum" required><?= $edit_entry ? htmlspecialchars($edit_entry['legal_product_purpose']) : '' ?></textarea>
                             </div>
-                            
+
                             <div class="space-y-2">
-                                <button type="submit" name="<?= $edit_entry ? 'update_entry' : 'add_entry' ?>" 
-                                        class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
+                                <button type="submit" name="<?= $edit_entry ? 'update_entry' : 'add_entry' ?>"
+                                    class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
                                     <i class="fas fa-<?= $edit_entry ? 'edit' : 'plus' ?> mr-2"></i>
                                     <?= $edit_entry ? 'Update Data' : 'Simpan Data' ?>
                                 </button>
-                                
+
                                 <?php if ($edit_entry): ?>
                                     <a href="admin.php" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-full transition duration-300 text-center block">
                                         <i class="fas fa-times mr-2"></i>Batal Edit
@@ -396,7 +418,7 @@ if (isset($_GET['logout'])) {
                             </a>
                         <?php endif; ?>
                     </div>
-                    
+
                     <div class="max-h-80 overflow-y-auto space-y-3">
                         <?php if (empty($recent_entries)): ?>
                             <div class="text-center text-gray-500 py-8">
@@ -417,13 +439,13 @@ if (isset($_GET['logout'])) {
                                             </div>
                                         </div>
                                         <div class="flex space-x-1 ml-2">
-                                            <a href="?action=edit&id=<?= $entry['id'] ?>" 
-                                               class="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition" title="Edit">
+                                            <a href="?action=edit&id=<?= $entry['id'] ?>"
+                                                class="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition" title="Edit">
                                                 <i class="fas fa-edit text-xs"></i>
                                             </a>
-                                            <a href="?action=delete&id=<?= $entry['id'] ?>" 
-                                               class="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition" title="Delete"
-                                               onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                            <a href="?action=delete&id=<?= $entry['id'] ?>"
+                                                class="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition" title="Delete"
+                                                onclick="return confirm('Yakin ingin menghapus data ini?')">
                                                 <i class="fas fa-trash text-xs"></i>
                                             </a>
                                         </div>
@@ -435,11 +457,12 @@ if (isset($_GET['logout'])) {
                 </div>
             </div>
         </div>
-        
+
         <!-- Footer -->
         <div class="text-center text-white mt-8 mb-4">
             <small>By.JDIH Prov Bali | 2025 - <?= date('Y') ?></small>
         </div>
     </div>
 </body>
+
 </html>

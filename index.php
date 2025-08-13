@@ -16,7 +16,7 @@ if (isset($_GET['logged_in']) && $_GET['logged_in'] == '1' && $logged_in_user) {
 // Handle logout
 if (isset($_GET['logout'])) {
     session_destroy();
-    header('Location: user.php');
+    header('Location: index.php');
     exit;
 }
 

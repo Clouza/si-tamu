@@ -6,7 +6,8 @@ $error = '';
 $success = '';
 $generated_password = '';
 
-function generatePassword($length = 8) {
+function generatePassword($length = 8)
+{
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
     $randomString = '';
@@ -18,7 +19,7 @@ function generatePassword($length = 8) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nip = trim($_POST['nip']);
-    
+
     if (empty($nip)) {
         $error = 'NIP harus diisi!';
     } else {
@@ -26,18 +27,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check if NIP already exists
             $check = $pdo->prepare("SELECT COUNT(*) FROM users WHERE nip = ?");
             $check->execute([$nip]);
-            
+
             if ($check->fetchColumn() > 0) {
                 $error = 'NIP sudah terdaftar!';
             } else {
                 // Generate password
                 $generated_password = generatePassword();
                 $hashed_password = password_hash($generated_password, PASSWORD_DEFAULT);
-                
+
                 // Insert new user
                 $stmt = $pdo->prepare("INSERT INTO users (nip, password, role) VALUES (?, ?, ?)");
                 $stmt->execute([$nip, $hashed_password, 'admin']);
-                
+
                 $success = 'Akun berhasil dibuat!';
             }
         } catch (PDOException $e) {
@@ -49,16 +50,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SI-TAMU - Daftar Admin</title>
-    
+
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,900" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
     <style>
         /* Background gradasi animasi */
         body {
@@ -68,9 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         /* Animasi form muncul */
@@ -79,8 +89,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes fadeInUp {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Efek glow berkedip saat hover/focus */
@@ -96,8 +113,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes blinkGlow {
-            from { box-shadow: 0 0 5px #fff; }
-            to { box-shadow: 0 0 15px #ffeb3b; }
+            from {
+                box-shadow: 0 0 5px #fff;
+            }
+
+            to {
+                box-shadow: 0 0 15px #ffeb3b;
+            }
         }
 
         /* Tombol submit animasi hover */
@@ -125,9 +147,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes copySuccess {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
@@ -168,14 +198,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="mt-3">
                                             <p class="text-sm font-medium mb-2">Password yang dibuat:</p>
                                             <div class="flex items-center space-x-2">
-                                                <input type="text" 
-                                                       id="generatedPassword" 
-                                                       value="<?= htmlspecialchars($generated_password) ?>" 
-                                                       readonly 
-                                                       class="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded text-sm font-mono">
-                                                <button type="button" 
-                                                        onclick="copyPassword()" 
-                                                        class="copy-button px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                                <input type="text"
+                                                    id="generatedPassword"
+                                                    value="<?= htmlspecialchars($generated_password) ?>"
+                                                    readonly
+                                                    class="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded text-sm font-mono">
+                                                <button type="button"
+                                                    onclick="copyPassword()"
+                                                    class="copy-button px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
                                                     <i id="copyIcon" class="fas fa-copy"></i>
                                                 </button>
                                             </div>
@@ -195,21 +225,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label for="nip" class="block text-sm font-medium text-gray-700 mb-2">
                                         <i class="fas fa-id-card mr-2"></i>NIP
                                     </label>
-                                    <input type="text" 
-                                           id="nip" 
-                                           name="nip" 
-                                           class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                           placeholder="Masukkan NIP Baru"
-                                           value="<?= isset($_POST['nip']) ? htmlspecialchars($_POST['nip']) : '' ?>"
-                                           required>
+                                    <input type="text"
+                                        id="nip"
+                                        name="nip"
+                                        class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                        placeholder="Masukkan NIP Baru"
+                                        value="<?= isset($_POST['nip']) ? htmlspecialchars($_POST['nip']) : '' ?>"
+                                        required>
                                     <p class="text-xs text-gray-500 mt-1">
                                         <i class="fas fa-lightbulb mr-1"></i>
                                         Password akan dibuat otomatis setelah pendaftaran
                                     </p>
                                 </div>
 
-                                <button type="submit" 
-                                        class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
+                                <button type="submit"
+                                    class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
                                     <i class="fas fa-user-plus mr-2"></i>Daftar Akun
                                 </button>
                             </form>
@@ -227,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </a>
                                 <div class="text-gray-400">|</div>
                             <?php endif; ?>
-                            <a href="user.php" class="text-green-600 hover:text-green-800 text-sm font-medium">
+                            <a href="index.php" class="text-green-600 hover:text-green-800 text-sm font-medium">
                                 <i class="fas fa-book mr-1"></i>Kembali ke Buku Tamu
                             </a>
                         </div>
@@ -247,18 +277,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function copyPassword() {
             const passwordInput = document.getElementById('generatedPassword');
             const copyIcon = document.getElementById('copyIcon');
-            
+
             // Select and copy the text
             passwordInput.select();
             passwordInput.setSelectionRange(0, 99999); // For mobile devices
-            
+
             try {
                 navigator.clipboard.writeText(passwordInput.value).then(function() {
                     // Success animation
                     copyIcon.className = 'fas fa-check copy-success';
                     copyIcon.parentElement.classList.add('bg-green-500');
                     copyIcon.parentElement.classList.remove('bg-blue-500');
-                    
+
                     // Reset after 2 seconds
                     setTimeout(function() {
                         copyIcon.className = 'fas fa-copy';
@@ -276,13 +306,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 showCopySuccess();
             }
         }
-        
+
         function showCopySuccess() {
             const copyIcon = document.getElementById('copyIcon');
             copyIcon.className = 'fas fa-check copy-success';
             copyIcon.parentElement.classList.add('bg-green-500');
             copyIcon.parentElement.classList.remove('bg-blue-500');
-            
+
             setTimeout(function() {
                 copyIcon.className = 'fas fa-copy';
                 copyIcon.parentElement.classList.add('bg-blue-500');
@@ -291,4 +321,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>

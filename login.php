@@ -7,7 +7,7 @@ if (isset($_SESSION['user_logged_in'])) {
     if ($_SESSION['user_role'] === 'admin') {
         header('Location: admin.php');
     } else {
-        header('Location: user.php');
+        header('Location: index.php');
     }
     exit;
 }
@@ -18,7 +18,7 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nip = trim($_POST['nip']);
     $password = trim($_POST['password']);
-    
+
     if (empty($nip) || empty($password)) {
         $error = 'NIP dan password harus diisi!';
     } else {
@@ -26,17 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("SELECT * FROM users WHERE nip = ?");
             $stmt->execute([$nip]);
             $user = $stmt->fetch();
-            
+
             if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_logged_in'] = true;
                 $_SESSION['user_nip'] = $user['nip'];
                 $_SESSION['user_role'] = $user['role'];
-                
+
                 // Role-based redirect
                 if ($user['role'] === 'admin') {
                     header('Location: admin.php');
                 } else {
-                    header('Location: user.php?logged_in=1');
+                    header('Location: index.php?logged_in=1');
                 }
                 exit;
             } else {
@@ -51,16 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SI-TAMU - Login Admin</title>
-    
+
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,900" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
     <style>
         /* Background gradasi animasi */
         body {
@@ -70,9 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         /* Animasi form muncul */
@@ -81,8 +90,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes fadeInUp {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Efek glow berkedip saat hover/focus */
@@ -98,8 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes blinkGlow {
-            from { box-shadow: 0 0 5px #fff; }
-            to { box-shadow: 0 0 15px #ffeb3b; }
+            from {
+                box-shadow: 0 0 5px #fff;
+            }
+
+            to {
+                box-shadow: 0 0 15px #ffeb3b;
+            }
         }
 
         /* Tombol submit animasi hover */
@@ -148,13 +169,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="nip" class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class="fas fa-id-card mr-2"></i>NIP
                                 </label>
-                                <input type="text" 
-                                       id="nip" 
-                                       name="nip" 
-                                       class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                       placeholder="Masukkan NIP Anda"
-                                       value="<?= isset($_POST['nip']) ? htmlspecialchars($_POST['nip']) : '' ?>"
-                                       required>
+                                <input type="text"
+                                    id="nip"
+                                    name="nip"
+                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Masukkan NIP Anda"
+                                    value="<?= isset($_POST['nip']) ? htmlspecialchars($_POST['nip']) : '' ?>"
+                                    required>
                             </div>
 
                             <div>
@@ -162,22 +183,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <i class="fas fa-lock mr-2"></i>Password
                                 </label>
                                 <div class="relative">
-                                    <input type="password" 
-                                           id="password" 
-                                           name="password" 
-                                           class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 pr-12" 
-                                           placeholder="Masukkan Password"
-                                           required>
-                                    <button type="button" 
-                                            onclick="togglePassword()" 
-                                            class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+                                    <input type="password"
+                                        id="password"
+                                        name="password"
+                                        class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 pr-12"
+                                        placeholder="Masukkan Password"
+                                        required>
+                                    <button type="button"
+                                        onclick="togglePassword()"
+                                        class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
                                         <i id="passwordIcon" class="fas fa-eye"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <button type="submit" 
-                                    class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
+                            <button type="submit"
+                                class="btn-animated w-full text-white font-bold py-3 px-4 rounded-full transition duration-300">
                                 <i class="fas fa-sign-in-alt mr-2"></i>Masuk
                             </button>
                         </form>
@@ -187,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <i class="fas fa-user-plus mr-1"></i>Daftar Akun Baru
                             </a>
                             <div class="text-gray-400">|</div>
-                            <a href="user.php" class="text-green-600 hover:text-green-800 text-sm font-medium">
+                            <a href="index.php" class="text-green-600 hover:text-green-800 text-sm font-medium">
                                 <i class="fas fa-book mr-1"></i>Kembali ke Buku Tamu
                             </a>
                         </div>
@@ -207,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const passwordIcon = document.getElementById('passwordIcon');
-            
+
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 passwordIcon.className = 'fas fa-eye-slash';
@@ -218,4 +239,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>
