@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SI-TAMU - Status</title>
-    <link href="assets/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(-45deg, #1a73e8, #0f9d58, #fbbc05, #ea4335);
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="container">
         <div class="head text-center mt-4 text-white">
-            <img src="assets/img/logo.png.png" width="100" alt="Logo">
+            <img src="https://via.placeholder.com/100x100/1a73e8/ffffff?text=LOGO" width="100" alt="Logo">
             <h2 class="mt-2">SI-TAMU <br> PROVINSI BALI</h2>
         </div>
 

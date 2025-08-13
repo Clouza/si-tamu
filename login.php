@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="text-center mt-8 text-white">
-            <img src="assets/img/logo.png.png" width="100" alt="Logo" class="mx-auto animate-pulse">
+            <img src="https://via.placeholder.com/100x100/1a73e8/ffffff?text=LOGO" width="100" alt="Logo" class="mx-auto animate-pulse">
             <h2 class="mt-4 text-2xl font-bold">SI-TAMU <br> PROVINSI BALI</h2>
         </div>
 
