@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <!-- Head -->
         <div class="head text-center mt-4 text-white">
-            <img src="https://via.placeholder.com/100x100/1a73e8/ffffff?text=LOGO" width="100" alt="Logo" style="animation: fadeInUp 1s ease;">
+            <img src="logo.jpg" width="100" alt="Logo" style="animation: fadeInUp 1s ease;">
             <h2 class="mt-2">SI-TAMU <br> PROVINSI BALI</h2>
             <?php if ($logged_in_user): ?>
                 <div class="mt-3">

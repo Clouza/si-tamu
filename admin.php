@@ -260,7 +260,7 @@ if (isset($_GET['logout'])) {
             <div class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="https://via.placeholder.com/60x60/1a73e8/ffffff?text=LOGO" width="60" alt="Logo" class="animate-pulse">
+                        <img src="logo.jpg" width="60" alt="Logo" class="animate-pulse">
                         <div>
                             <h2 class="text-xl font-bold text-gray-800">SI-TAMU Admin</h2>
                             <p class="text-sm text-gray-600">PROVINSI BALI</p>
