@@ -140,6 +140,97 @@ if ($action === 'edit' && $entry_id) {
     }
 }
 
+// Handle export functionality
+if (isset($_GET['export'])) {
+    $export_type = $_GET['export'];
+    
+    try {
+        // Get all data for export
+        $stmt = $pdo->query("SELECT * FROM guest_entries ORDER BY created_at DESC");
+        $all_entries = $stmt->fetchAll();
+        
+        if ($export_type === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=data_kunjungan_' . date('Y-m-d_H-i-s') . '.csv');
+            
+            $output = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fputs($output, "\xEF\xBB\xBF");
+            
+            // Header CSV
+            fputcsv($output, [
+                'ID',
+                'Nama Pengunjung',
+                'Nomor KTP',
+                'Instansi',
+                'Pekerjaan',
+                'Informasi yang Dibutuhkan',
+                'Tujuan Memperoleh Informasi',
+                'Tanggal Kunjungan'
+            ]);
+            
+            // Data rows
+            foreach ($all_entries as $entry) {
+                fputcsv($output, [
+                    $entry['id'],
+                    $entry['visitor_name'],
+                    $entry['ktp_number'],
+                    $entry['institution'],
+                    $entry['job'],
+                    $entry['required_info'],
+                    $entry['legal_product_purpose'],
+                    date('d/m/Y H:i:s', strtotime($entry['created_at']))
+                ]);
+            }
+            
+            fclose($output);
+            exit;
+            
+        } elseif ($export_type === 'excel') {
+            // Simple HTML table for Excel import
+            header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+            header('Content-Disposition: attachment; filename=data_kunjungan_' . date('Y-m-d_H-i-s') . '.xls');
+            
+            echo "\xEF\xBB\xBF"; // BOM for UTF-8
+            echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+            echo '<head><meta charset="utf-8"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>';
+            echo '<body>';
+            echo '<table border="1">';
+            echo '<tr>';
+            echo '<th>ID</th>';
+            echo '<th>Nama Pengunjung</th>';
+            echo '<th>Nomor KTP</th>';
+            echo '<th>Instansi</th>';
+            echo '<th>Pekerjaan</th>';
+            echo '<th>Informasi yang Dibutuhkan</th>';
+            echo '<th>Tujuan Memperoleh Informasi</th>';
+            echo '<th>Tanggal Kunjungan</th>';
+            echo '</tr>';
+            
+            foreach ($all_entries as $entry) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($entry['id']) . '</td>';
+                echo '<td>' . htmlspecialchars($entry['visitor_name']) . '</td>';
+                echo '<td>' . htmlspecialchars($entry['ktp_number']) . '</td>';
+                echo '<td>' . htmlspecialchars($entry['institution']) . '</td>';
+                echo '<td>' . htmlspecialchars($entry['job']) . '</td>';
+                echo '<td>' . htmlspecialchars($entry['required_info']) . '</td>';
+                echo '<td>' . htmlspecialchars($entry['legal_product_purpose']) . '</td>';
+                echo '<td>' . date('d/m/Y H:i:s', strtotime($entry['created_at'])) . '</td>';
+                echo '</tr>';
+            }
+            
+            echo '</table>';
+            echo '</body></html>';
+            exit;
+        }
+        
+    } catch (PDOException $e) {
+        $error = "Error exporting data: " . $e->getMessage();
+    }
+}
+
 // Handle logout
 if (isset($_GET['logout'])) {
     session_destroy();
@@ -268,6 +359,17 @@ if (isset($_GET['logout'])) {
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm text-gray-700">Welcome, <strong><?= htmlspecialchars($_SESSION['user_nip']) ?></strong></span>
+                        
+                        <!-- Export Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <a href="?export=csv" class="px-3 py-1 bg-green-500 text-white rounded-full text-sm hover:bg-green-600 transition" title="Export ke CSV">
+                                <i class="fas fa-file-csv mr-1"></i>CSV
+                            </a>
+                            <a href="?export=excel" class="px-3 py-1 bg-orange-500 text-white rounded-full text-sm hover:bg-orange-600 transition" title="Export ke Excel">
+                                <i class="fas fa-file-excel mr-1"></i>Excel
+                            </a>
+                        </div>
+                        
                         <a href="index.php" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
                             <i class="fas fa-eye mr-1"></i>User View
                         </a>
@@ -400,6 +502,28 @@ if (isset($_GET['logout'])) {
                 <div class="stat-card bg-white bg-opacity-95 rounded-lg shadow-lg p-6 text-center">
                     <div class="text-3xl font-bold text-green-600"><?= $total_entries ?? 0 ?></div>
                     <div class="text-gray-600 font-medium">Total Pengunjung</div>
+                </div>
+
+                <!-- Export Data Section -->
+                <div class="stat-card bg-white bg-opacity-95 rounded-lg shadow-lg p-6">
+                    <h6 class="font-bold mb-4 text-gray-800">
+                        <i class="fas fa-download mr-2 text-green-600"></i>Export Data
+                    </h6>
+                    <p class="text-sm text-gray-600 mb-4">Export semua data kunjungan ke format:</p>
+                    <div class="space-y-2">
+                        <a href="?export=csv" class="w-full flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+                            <i class="fas fa-file-csv mr-2"></i>
+                            Export CSV
+                        </a>
+                        <a href="?export=excel" class="w-full flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+                            <i class="fas fa-file-excel mr-2"></i>
+                            Export Excel
+                        </a>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        File akan berisi semua data kunjungan dengan timestamp
+                    </p>
                 </div>
 
                 <!-- Recent Entries -->
