@@ -86,25 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css" rel="stylesheet">
 
     <style>
-        /* Background gradasi animasi */
         body {
-            background: linear-gradient(-45deg, #1a73e8, #0f9d58, #fbbc05, #ea4335);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-        }
-
-        @keyframes gradientBG {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+            background: #1e3a8a;
         }
 
         /* Animasi form muncul */
@@ -124,41 +107,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        /* Efek glow berkedip saat hover/focus */
         .form-control-user {
             transition: all 0.3s ease;
+            outline: none;
+            border: 2px solid transparent;
         }
 
         .form-control-user:hover,
         .form-control-user:focus {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-            animation: blinkGlow 1s infinite alternate;
-            border: 2px solid #fff;
+            border: 2px solid #dc2626;
+            outline: none;
         }
 
-        @keyframes blinkGlow {
-            from {
-                box-shadow: 0 0 5px #fff;
-            }
-
-            to {
-                box-shadow: 0 0 15px #ffeb3b;
-            }
-        }
-
-        /* Tombol submit animasi hover */
         .btn-animated {
-            background: linear-gradient(90deg, #1a73e8, #0f9d58);
+            background: #dc2626;
             border: none;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
             color: white;
             font-weight: bold;
         }
 
         .btn-animated:hover {
-            background: linear-gradient(90deg, #0f9d58, #1a73e8);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            background: #b91c1c;
         }
     </style>
 </head>
@@ -168,7 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <!-- Head -->
         <div class="head text-center mt-4 text-white">
-            <img src="logo.jpg" width="100" alt="Logo" style="animation: fadeInUp 1s ease;">
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <img src="biro-hukum-logo.jpg" width="100" alt="Logo">
+                <img src="jdih-bali.jpg" width="100" alt="Logo">
+            </div>
             <h2 class="mt-2">SI-TAMU <br> PROVINSI BALI</h2>
             <?php if ($logged_in_user): ?>
                 <div class="mt-3">
@@ -234,11 +207,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <button type="submit" class="btn btn-animated btn-user btn-block">
                                     Simpan Buku Tamu
-                                    <div class="text-center">
-                                        <a class="small" href="#">By.JDIH Prov Bali | 2025 - <?= date('Y') ?></a>
-                                    </div>
                                 </button>
                             </form>
+
+                            <div class="text-center mt-2">
+                                <a class="small" href="https://jdih.baliprov.go.id">By JDIH Prov Bali | 2025 - <?= date('Y') ?></a>
+                            </div>
                         </div>
                     </div>
                 </div>

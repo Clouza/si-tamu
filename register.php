@@ -62,25 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* Background gradasi animasi */
         body {
-            background: linear-gradient(-45deg, #1a73e8, #0f9d58, #fbbc05, #ea4335);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-        }
-
-        @keyframes gradientBG {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+            background: #1e3a8a;
         }
 
         /* Animasi form muncul */
@@ -103,35 +86,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Efek glow berkedip saat hover/focus */
         .input-glow {
             transition: all 0.3s ease;
+            outline: none;
+            border: 2px solid transparent;
         }
 
         .input-glow:hover,
         .input-glow:focus {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-            animation: blinkGlow 1s infinite alternate;
-            border: 2px solid #fff;
+            border: 2px solid #dc2626;
+            outline: none;
         }
 
-        @keyframes blinkGlow {
-            from {
-                box-shadow: 0 0 5px #fff;
-            }
-
-            to {
-                box-shadow: 0 0 15px #ffeb3b;
-            }
-        }
-
-        /* Tombol submit animasi hover */
         .btn-animated {
-            background: linear-gradient(90deg, #1a73e8, #0f9d58);
-            transition: all 0.4s ease;
+            background: #dc2626;
+            transition: all 0.3s ease;
         }
 
         .btn-animated:hover {
-            background: linear-gradient(90deg, #0f9d58, #1a73e8);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            background: #b91c1c;
         }
 
         .copy-button {
@@ -139,25 +110,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .copy-button:hover {
-            transform: scale(1.1);
+            background: #2563eb;
         }
 
         .copy-success {
-            animation: copySuccess 0.3s ease;
-        }
-
-        @keyframes copySuccess {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            background: #16a34a !important;
         }
     </style>
 </head>
@@ -166,7 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="text-center mt-8 text-white">
-            <img src="https://via.placeholder.com/100x100/1a73e8/ffffff?text=LOGO" width="100" alt="Logo" class="mx-auto animate-pulse">
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <img src="biro-hukum-logo.jpg" width="100" alt="Logo">
+                <img src="jdih-bali.jpg" width="100" alt="Logo">
+            </div>
             <h2 class="mt-4 text-2xl font-bold">SI-TAMU <br> PROVINSI BALI</h2>
         </div>
 
@@ -228,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="text"
                                         id="nip"
                                         name="nip"
-                                        class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                        class="input-glow w-full px-4 py-3 bg-gray-50 rounded-full"
                                         placeholder="Masukkan NIP Baru"
                                         value="<?= isset($_POST['nip']) ? htmlspecialchars($_POST['nip']) : '' ?>"
                                         required>
@@ -264,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="mt-8 text-center">
                             <p class="text-xs text-gray-500">
-                                By.JDIH Prov Bali | 2025 - <?= date('Y') ?>
+                                By JDIH Prov Bali | 2025 - <?= date('Y') ?>
                             </p>
                         </div>
                     </div>

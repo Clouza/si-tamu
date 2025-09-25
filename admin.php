@@ -143,21 +143,21 @@ if ($action === 'edit' && $entry_id) {
 // Handle export functionality
 if (isset($_GET['export'])) {
     $export_type = $_GET['export'];
-    
+
     try {
         // Get all data for export
         $stmt = $pdo->query("SELECT * FROM guest_entries ORDER BY created_at DESC");
         $all_entries = $stmt->fetchAll();
-        
+
         if ($export_type === 'csv') {
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename=data_kunjungan_' . date('Y-m-d_H-i-s') . '.csv');
-            
+
             $output = fopen('php://output', 'w');
-            
+
             // Add BOM for UTF-8
             fputs($output, "\xEF\xBB\xBF");
-            
+
             // Header CSV
             fputcsv($output, [
                 'ID',
@@ -169,7 +169,7 @@ if (isset($_GET['export'])) {
                 'Tujuan Memperoleh Informasi',
                 'Tanggal Kunjungan'
             ]);
-            
+
             // Data rows
             foreach ($all_entries as $entry) {
                 fputcsv($output, [
@@ -183,15 +183,14 @@ if (isset($_GET['export'])) {
                     date('d/m/Y H:i:s', strtotime($entry['created_at']))
                 ]);
             }
-            
+
             fclose($output);
             exit;
-            
         } elseif ($export_type === 'excel') {
             // Simple HTML table for Excel import
             header('Content-Type: application/vnd.ms-excel; charset=utf-8');
             header('Content-Disposition: attachment; filename=data_kunjungan_' . date('Y-m-d_H-i-s') . '.xls');
-            
+
             echo "\xEF\xBB\xBF"; // BOM for UTF-8
             echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
             echo '<head><meta charset="utf-8"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>';
@@ -207,7 +206,7 @@ if (isset($_GET['export'])) {
             echo '<th>Tujuan Memperoleh Informasi</th>';
             echo '<th>Tanggal Kunjungan</th>';
             echo '</tr>';
-            
+
             foreach ($all_entries as $entry) {
                 echo '<tr>';
                 echo '<td>' . htmlspecialchars($entry['id']) . '</td>';
@@ -220,12 +219,11 @@ if (isset($_GET['export'])) {
                 echo '<td>' . date('d/m/Y H:i:s', strtotime($entry['created_at'])) . '</td>';
                 echo '</tr>';
             }
-            
+
             echo '</table>';
             echo '</body></html>';
             exit;
         }
-        
     } catch (PDOException $e) {
         $error = "Error exporting data: " . $e->getMessage();
     }
@@ -253,25 +251,8 @@ if (isset($_GET['logout'])) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* Background gradasi animasi */
         body {
-            background: linear-gradient(-45deg, #1a73e8, #0f9d58, #fbbc05, #ea4335);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-        }
-
-        @keyframes gradientBG {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+            background: #1e3a8a;
         }
 
         /* Animasi form muncul */
@@ -294,35 +275,22 @@ if (isset($_GET['logout'])) {
         /* Efek glow berkedip saat hover/focus */
         .input-glow {
             transition: all 0.3s ease;
+            outline: transparent;
+            border: 2px solid transparent;
         }
 
         .input-glow:hover,
         .input-glow:focus {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-            animation: blinkGlow 1s infinite alternate;
-            border: 2px solid #fff;
+            border: 2px solid #dc2626;
         }
 
-        @keyframes blinkGlow {
-            from {
-                box-shadow: 0 0 5px #fff;
-            }
-
-            to {
-                box-shadow: 0 0 15px #ffeb3b;
-            }
-        }
-
-        /* Tombol submit animasi hover */
         .btn-animated {
-            background: linear-gradient(90deg, #1a73e8, #0f9d58);
-            transition: all 0.4s ease;
+            background: #dc2626;
+            transition: all 0.3s ease;
         }
 
         .btn-animated:hover {
-            background: linear-gradient(90deg, #0f9d58, #1a73e8);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            background: #b91c1c;
         }
 
         .stat-card {
@@ -330,16 +298,8 @@ if (isset($_GET['logout'])) {
             transition: transform 0.3s ease;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
         .entry-item {
             transition: all 0.3s ease;
-        }
-
-        .entry-item:hover {
-            transform: translateX(2px);
         }
     </style>
 </head>
@@ -351,7 +311,11 @@ if (isset($_GET['logout'])) {
             <div class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="logo.jpg" width="60" alt="Logo" class="animate-pulse">
+                        <!-- <img src="biro-hukum-logo.jpg" width="60" alt="Logo"> -->
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <img src="biro-hukum-logo.jpg" width="60" alt="Logo">
+                            <img src="jdih-bali.jpg" width="60" alt="Logo">
+                        </div>
                         <div>
                             <h2 class="text-xl font-bold text-gray-800">SI-TAMU Admin</h2>
                             <p class="text-sm text-gray-600">PROVINSI BALI</p>
@@ -359,7 +323,7 @@ if (isset($_GET['logout'])) {
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm text-gray-700">Welcome, <strong><?= htmlspecialchars($_SESSION['user_nip']) ?></strong></span>
-                        
+
                         <!-- Export Buttons -->
                         <div class="flex items-center space-x-2">
                             <a href="?export=csv" class="px-3 py-1 bg-green-500 text-white rounded-full text-sm hover:bg-green-600 transition" title="Export ke CSV">
@@ -369,7 +333,7 @@ if (isset($_GET['logout'])) {
                                 <i class="fas fa-file-excel mr-1"></i>Excel
                             </a>
                         </div>
-                        
+
                         <a href="index.php" class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
                             <i class="fas fa-eye mr-1"></i>User View
                         </a>
@@ -418,36 +382,36 @@ if (isset($_GET['logout'])) {
 
                             <div>
                                 <input type="text" name="nama"
-                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    class="input-glow w-full px-4 py-3 bg-gray-50 rounded-full"
                                     placeholder="Nama Pengunjung"
                                     value="<?= $edit_entry ? htmlspecialchars($edit_entry['visitor_name']) : '' ?>" required>
                             </div>
                             <div>
                                 <input type="text" name="noktp"
-                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    class="input-glow w-full px-4 py-3 bg-gray-50 rounded-full"
                                     placeholder="Nomor KTP"
                                     value="<?= $edit_entry ? htmlspecialchars($edit_entry['ktp_number']) : '' ?>" required>
                             </div>
                             <div>
                                 <input type="text" name="instansi"
-                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    class="input-glow w-full px-4 py-3 bg-gray-50 rounded-full"
                                     placeholder="Instansi"
                                     value="<?= $edit_entry ? htmlspecialchars($edit_entry['institution']) : '' ?>" required>
                             </div>
                             <div>
                                 <input type="text" name="pekerjaan"
-                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    class="input-glow w-full px-4 py-3 bg-gray-50 rounded-full"
                                     placeholder="Pekerjaan"
                                     value="<?= $edit_entry ? htmlspecialchars($edit_entry['job']) : '' ?>" required>
                             </div>
                             <div>
                                 <textarea name="informasi" rows="3"
-                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    class="input-glow w-full px-4 py-3 bg-gray-50 rounded-2xl"
                                     placeholder="Informasi yang Dibutuhkan" required><?= $edit_entry ? htmlspecialchars($edit_entry['required_info']) : '' ?></textarea>
                             </div>
                             <div>
                                 <textarea name="tujuan" rows="3"
-                                    class="input-glow w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    class="input-glow w-full px-4 py-3 bg-gray-50 rounded-2xl"
                                     placeholder="Tujuan Memperoleh Informasi Produk Hukum" required><?= $edit_entry ? htmlspecialchars($edit_entry['legal_product_purpose']) : '' ?></textarea>
                             </div>
 
