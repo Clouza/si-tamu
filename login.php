@@ -111,8 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Header -->
         <div class="text-center mt-8 text-white">
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <img src="biro-hukum-logo.jpg" width="100" alt="Logo">
-                <img src="jdih-bali.jpg" width="100" alt="Logo">
+                <img src="biro-hukum-logo.png" width="100" alt="Logo">
+                <img src="jdih-bali.png" width="100" alt="Logo">
             </div>
             <h2 class="mt-4 text-2xl font-bold">SI-TAMU <br> PROVINSI BALI</h2>
         </div>
