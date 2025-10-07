@@ -139,8 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Head -->
         <div class="head text-center mt-4 text-white">
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <img src="biro-hukum-logo.png" width="100" alt="Logo">
-                <img src="jdih-bali.png" width="100" alt="Logo">
+                <img src="biro-hukum-logo.png" width="100" alt="Logo" style="background: white; border-radius: 100%; padding: 1rem;">
+                <img src="jdih-bali.png" width="100" alt="Logo" style="background: white; border-radius: 100%; padding: 0.5rem;">
             </div>
             <h2 class="mt-2">SI-TAMU <br> PROVINSI BALI</h2>
             <?php if ($logged_in_user): ?>

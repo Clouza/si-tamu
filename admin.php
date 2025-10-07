@@ -313,8 +313,8 @@ if (isset($_GET['logout'])) {
                     <div class="flex items-center space-x-4">
                         <!-- <img src="biro-hukum-logo.png" width="60" alt="Logo"> -->
                         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                            <img src="biro-hukum-logo.png" width="60" alt="Logo">
-                            <img src="jdih-bali.png" width="60" alt="Logo">
+                            <img src="biro-hukum-logo.png" width="60" alt="Logo" style="background: white; border-radius: 100%; padding: 1rem;">
+                            <img src="jdih-bali.png" width="60" alt="Logo" style="background: white; border-radius: 100%; padding: 0.5rem;">
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-gray-800">SI-TAMU Admin</h2>
