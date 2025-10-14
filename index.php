@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <img src="biro-hukum-logo.png" width="100" alt="Logo" style="background: white; border-radius: 100%; padding: 1rem;">
                 <img src="jdih-bali.png" width="100" alt="Logo" style="background: white; border-radius: 100%; padding: 0.5rem;">
             </div>
-            <h2 class="mt-2">SI-TAMU <br> PROVINSI BALI</h2>
+            <h2 class="mt-2">SI-TAMU <br> JDIH PROVINSI BALI</h2>
             <?php if ($logged_in_user): ?>
                 <div class="mt-3">
                     <span class="bg-opacity-20 px-4 py-2 rounded-full text-sm" style="background-color: black; border-radius: 6px;">
