@@ -2,92 +2,103 @@
 require_once 'database.php';
 
 try {
-    // check if phone_number column already exists
+    echo "=== Database Migration ===\n\n";
+
+    // check current table structure
     $check = $pdo->query("PRAGMA table_info(guest_entries)");
     $columns = $check->fetchAll(PDO::FETCH_ASSOC);
 
     $phone_exists = false;
+    $ktp_nullable = false;
+
     foreach ($columns as $column) {
         if ($column['name'] === 'phone_number') {
             $phone_exists = true;
-            break;
         }
-    }
-
-    if ($phone_exists) {
-        echo "Kolom phone_number sudah ada. Tidak perlu migrasi.\n";
-    } else {
-        // add phone_number column
-        $pdo->exec("ALTER TABLE guest_entries ADD COLUMN phone_number VARCHAR(20) DEFAULT NULL");
-        echo "Berhasil menambahkan kolom phone_number ke tabel guest_entries.\n";
-    }
-
-    // check if ktp_number is nullable
-    $ktp_nullable = false;
-    foreach ($columns as $column) {
         if ($column['name'] === 'ktp_number' && $column['notnull'] == 0) {
             $ktp_nullable = true;
-            break;
         }
     }
 
-    if (!$ktp_nullable) {
-        echo "\nPerhatian: Kolom ktp_number masih NOT NULL.\n";
-        echo "Untuk membuat ktp_number opsional, perlu recreate table.\n";
-        echo "Apakah ingin melanjutkan? Ketik 'yes' untuk lanjut: ";
-
-        $handle = fopen("php://stdin", "r");
-        $line = trim(fgets($handle));
-        fclose($handle);
-
-        if ($line === 'yes') {
-            // backup and recreate table to make ktp_number nullable
-            $pdo->beginTransaction();
-
-            // create new table with ktp_number nullable
-            $pdo->exec("
-                CREATE TABLE guest_entries_new (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    visitor_name VARCHAR(255) NOT NULL,
-                    ktp_number VARCHAR(16),
-                    phone_number VARCHAR(20),
-                    institution VARCHAR(255) NOT NULL,
-                    job VARCHAR(255) NOT NULL,
-                    required_info TEXT NOT NULL,
-                    legal_product_purpose TEXT NOT NULL,
-                    visit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ");
-
-            // copy all data from old table to new table
-            $pdo->exec("
-                INSERT INTO guest_entries_new (id, visitor_name, ktp_number, phone_number, institution, job, required_info, legal_product_purpose, visit_date)
-                SELECT id, visitor_name, ktp_number, phone_number, institution, job, required_info, legal_product_purpose, visit_date
-                FROM guest_entries
-            ");
-
-            // drop old table
-            $pdo->exec("DROP TABLE guest_entries");
-
-            // rename new table
-            $pdo->exec("ALTER TABLE guest_entries_new RENAME TO guest_entries");
-
-            $pdo->commit();
-
-            echo "Berhasil mengubah ktp_number menjadi opsional.\n";
-            echo "Semua data tetap aman.\n";
-        } else {
-            echo "Migrasi dibatalkan.\n";
-        }
-    } else {
-        echo "Kolom ktp_number sudah nullable (opsional).\n";
+    // check if migration is needed
+    if ($phone_exists && $ktp_nullable) {
+        echo "✓ Database sudah up-to-date\n";
+        echo "  - phone_number column exists\n";
+        echo "  - ktp_number is nullable\n";
+        exit(0);
     }
 
-    echo "\nMigrasi selesai!\n";
+    // migration needed
+    echo "Migration diperlukan:\n";
+    if (!$phone_exists) echo "  - Tambah kolom phone_number\n";
+    if (!$ktp_nullable) echo "  - Ubah ktp_number menjadi nullable\n";
+    echo "\n";
+
+    // backup data
+    echo "Step 1: Backup data...\n";
+    $backup = $pdo->query("SELECT * FROM guest_entries")->fetchAll(PDO::FETCH_ASSOC);
+    echo "✓ Backup " . count($backup) . " rows\n\n";
+
+    // recreate table
+    echo "Step 2: Recreate table...\n";
+    $pdo->beginTransaction();
+
+    $pdo->exec("
+        CREATE TABLE guest_entries_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visitor_name VARCHAR(255) NOT NULL,
+            ktp_number VARCHAR(16),
+            phone_number VARCHAR(20),
+            institution VARCHAR(255) NOT NULL,
+            job VARCHAR(255) NOT NULL,
+            required_info TEXT NOT NULL,
+            legal_product_purpose TEXT NOT NULL,
+            visit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+    echo "✓ Table baru dibuat\n\n";
+
+    // restore data
+    echo "Step 3: Restore data...\n";
+    $stmt = $pdo->prepare("
+        INSERT INTO guest_entries_new
+        (id, visitor_name, ktp_number, phone_number, institution, job, required_info, legal_product_purpose, visit_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    foreach ($backup as $row) {
+        $stmt->execute([
+            $row['id'],
+            $row['visitor_name'],
+            $row['ktp_number'],
+            $row['phone_number'] ?? null,
+            $row['institution'],
+            $row['job'],
+            $row['required_info'],
+            $row['legal_product_purpose'],
+            $row['visit_date']
+        ]);
+    }
+    echo "✓ Restore " . count($backup) . " rows\n\n";
+
+    // replace table
+    echo "Step 4: Replace table...\n";
+    $pdo->exec("DROP TABLE guest_entries");
+    $pdo->exec("ALTER TABLE guest_entries_new RENAME TO guest_entries");
+    echo "✓ Table replaced\n\n";
+
+    $pdo->commit();
+
+    echo "=== Migration Success ===\n";
+    echo "✓ phone_number column added\n";
+    echo "✓ ktp_number is now nullable\n";
+    echo "✓ All data (" . count($backup) . " rows) preserved\n";
 
 } catch (PDOException $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
+        echo "\n✗ Migration failed, rolled back\n";
     }
     echo "Error: " . $e->getMessage() . "\n";
+    exit(1);
 }
