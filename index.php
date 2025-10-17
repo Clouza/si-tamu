@@ -26,6 +26,7 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $visitor_name = trim($_POST['nama']);
     $ktp_number = trim($_POST['noktp']);
+    $phone_number = trim($_POST['notelp']);
     $institution = trim($_POST['instansi']);
     $job = trim($_POST['pekerjaan']);
     $required_info = trim($_POST['informasi']);
@@ -33,24 +34,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validation
     if (
-        empty($visitor_name) || empty($ktp_number) || empty($institution) ||
+        empty($visitor_name) || empty($phone_number) || empty($institution) ||
         empty($job) || empty($required_info) || empty($legal_product_purpose)
     ) {
         $error = "Semua field harus diisi!";
-    } elseif (strlen($ktp_number) < 10) {
-        $error = "Nomor KTP tidak valid!";
     } elseif (strlen($visitor_name) < 2) {
         $error = "Nama pengunjung minimal 2 karakter!";
+    } elseif (strlen($phone_number) < 10) {
+        $error = "Nomor telepon tidak valid!";
     } else {
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO guest_entries (visitor_name, ktp_number, institution, job, required_info, legal_product_purpose) 
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO guest_entries (visitor_name, ktp_number, phone_number, institution, job, required_info, legal_product_purpose)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
                 $visitor_name,
                 $ktp_number,
+                $phone_number,
                 $institution,
                 $job,
                 $required_info,
@@ -60,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = "Data buku tamu berhasil disimpan! Terima kasih atas kunjungan Anda.";
 
             // Clear form data after successful submission
-            $visitor_name = $ktp_number = $institution = $job = $required_info = $legal_product_purpose = '';
+            $visitor_name = $ktp_number = $phone_number = $institution = $job = $required_info = $legal_product_purpose = '';
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
                 $error = "Data dengan KTP tersebut sudah terdaftar!";
@@ -191,7 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="text" class="form-control form-control-user" name="nama" placeholder="Nama Pengunjung" value="<?= isset($visitor_name) ? htmlspecialchars($visitor_name) : '' ?>" required>
                                 </div>
                                 <div class="form-group">
-                                    <input type="text" class="form-control form-control-user" name="noktp" placeholder="Nomor KTP" value="<?= isset($ktp_number) ? htmlspecialchars($ktp_number) : '' ?>" required>
+                                    <input type="text" class="form-control form-control-user" name="noktp" placeholder="Nomor KTP (Opsional)" value="<?= isset($ktp_number) ? htmlspecialchars($ktp_number) : '' ?>">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-user" name="notelp" placeholder="Nomor Telepon" value="<?= isset($phone_number) ? htmlspecialchars($phone_number) : '' ?>" required>
                                 </div>
                                 <div class="form-group">
                                     <input type="text" class="form-control form-control-user" name="instansi" placeholder="Instansi" value="<?= isset($institution) ? htmlspecialchars($institution) : '' ?>" required>
@@ -224,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="card-body">
                         <h5 class="text-center font-weight-bold">Informasi</h5>
                         <p class="mb-3 text-justify">
-                            Selamat datang di layanan buku tamu Provinsi Bali. Silakan isi data dengan benar untuk keperluan administrasi.
+                            Selamat datang di layanan buku tamu digital JDIH Provinsi Bali. Silakan isi data dengan benar untuk keperluan administrasi.
                             Data Anda akan digunakan sesuai ketentuan yang berlaku.
                             Kami berkomitmen menjaga kerahasiaan informasi Anda.
                         </p>
