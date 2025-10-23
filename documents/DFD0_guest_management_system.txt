@@ -1,0 +1,69 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entities
+    GUEST[Guest/Visitor<br/>Pengunjung]
+    ADMIN[Admin<br/>Administrator]
+
+    %% Main System Process
+    SITAMU((SI-TAMU<br/>Guest Management System<br/>Sistem Informasi Tamu))
+
+    %% Data Stores
+    DB[(Database<br/>Guest Entries and Users)]
+
+    %% Top-to-bottom flow organization
+    GUEST --> SITAMU
+    ADMIN --> SITAMU
+    SITAMU --> DB
+
+    %% Data Flows from Guest
+    GUEST -->|Guest Information<br/>Informasi Pengunjung| SITAMU
+    GUEST -->|Visit Purpose<br/>Tujuan Kunjungan| SITAMU
+    SITAMU -->|Confirmation Message<br/>Pesan Konfirmasi| GUEST
+    SITAMU -->|Form Validation<br/>Validasi Form| GUEST
+
+    %% Data Flows from Admin
+    ADMIN -->|Login Credentials<br/>Kredensial Login| SITAMU
+    ADMIN -->|Admin Commands<br/>Perintah Admin| SITAMU
+    SITAMU -->|Dashboard Data<br/>Data Dashboard| ADMIN
+    SITAMU -->|Statistics<br/>Statistik| ADMIN
+    SITAMU -->|Export Files<br/>File Export| ADMIN
+
+    %% Data Flows to/from Database
+    SITAMU -->|Store Guest Data<br/>Simpan Data Tamu| DB
+    SITAMU -->|Update/Delete Records<br/>Update/Hapus Data| DB
+    DB -->|Retrieve Data<br/>Ambil Data| SITAMU

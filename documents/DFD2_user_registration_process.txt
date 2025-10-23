@@ -1,0 +1,89 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entity
+    NEWADMIN[New Admin<br/>Admin Baru]
+
+    %% Level 2 Processes - User Registration (6.0)
+    P61((6.1<br/>Validate<br/>NIP Input<br/>Validasi Input NIP))
+    P62((6.2<br/>Check NIP<br/>Duplicate<br/>Cek Duplikasi NIP))
+    P63((6.3<br/>Generate<br/>Password<br/>Buat Password))
+    P64((6.4<br/>Hash<br/>Password<br/>Hash Password))
+    P65((6.5<br/>Create<br/>User Account<br/>Buat Akun User))
+    P66((6.6<br/>Display<br/>Generated Password<br/>Tampil Password))
+
+    %% Data Stores
+    DS1[(D1 Users<br/>Data User)]
+
+    %% Top-to-bottom flow organization
+    NEWADMIN --> P61
+    P61 --> P62
+    P62 --> P63
+    P63 --> P64
+    P64 --> P65
+    P65 --> P66
+    P66 --> NEWADMIN
+    P62 --> DS1
+    P65 --> DS1
+
+    %% Registration Input
+    NEWADMIN -->|Registration Form<br/>NIP only| P61
+
+    %% NIP Validation
+    P61 -->|NIP Empty<br/>NIP Kosong| NEWADMIN
+    P61 -->|NIP Valid<br/>NIP Valid| P62
+
+    %% Duplicate Check
+    P62 -->|Check Existing NIP<br/>SELECT COUNT<br/>WHERE nip = param| DS1
+    DS1 -->|NIP Count Result<br/>Hasil Pencarian| P62
+    P62 -->|NIP Already Exists<br/>NIP Sudah Ada| NEWADMIN
+    P62 -->|NIP Available<br/>NIP Tersedia| P63
+
+    %% Password Generation
+    P63 -->|Generate Random Password<br/>8 characters<br/>alphanumeric| P64
+
+    %% Password Hashing
+    P64 -->|Hash Password<br/>password_hash<br/>PASSWORD_DEFAULT| P65
+
+    %% User Account Creation
+    P65 -->|Insert New User<br/>INSERT INTO users<br/>- nip<br/>- hashed_password<br/>- role = 'admin'| DS1
+    DS1 -->|Insert Result<br/>User Created| P65
+    P65 -->|Account Creation Success<br/>Akun Berhasil Dibuat| P66
+    P65 -->|Database Error<br/>Error Database| NEWADMIN
+
+    %% Display Generated Password
+    P66 -->|Show Generated Password<br/>Display with Copy Button<br/>Warning: Save Password| NEWADMIN

@@ -1,0 +1,107 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entity
+    ADMIN[Admin<br/>Administrator]
+
+    %% Level 2 Processes - Guest Entry CRUD (3.0)
+    P31((3.1<br/>Validate<br/>Admin Access<br/>Validasi Akses))
+    P32((3.2<br/>Verify<br/>CSRF Token<br/>Verifikasi Token))
+    P33((3.3<br/>Process<br/>Create Entry<br/>Proses Tambah))
+    P34((3.4<br/>Process<br/>Update Entry<br/>Proses Update))
+    P35((3.5<br/>Process<br/>Delete Entry<br/>Proses Hapus))
+    P36((3.6<br/>Retrieve<br/>Entry Data<br/>Ambil Data))
+
+    %% Data Stores
+    DS1[(D1 Guest Entries<br/>Data Tamu)]
+    DS2[(D2 Session Data<br/>Data Sesi)]
+
+    %% Top-to-bottom flow organization
+    ADMIN --> P31
+    P31 --> P32
+    P32 --> P33
+    P32 --> P34
+    P32 --> P35
+    P32 --> P36
+    P33 --> ADMIN
+    P34 --> ADMIN
+    P35 --> ADMIN
+    P36 --> ADMIN
+    P31 --> DS2
+    P32 --> DS2
+    P33 --> DS1
+    P34 --> DS1
+    P35 --> DS1
+    P36 --> DS1
+
+    %% Admin Access Validation
+    ADMIN -->|CRUD Request<br/>Create/Read/Update/Delete| P31
+    P31 -->|Check Admin Session<br/>Cek Sesi Admin| DS2
+    DS2 -->|Session Status<br/>Status Sesi| P31
+    P31 -->|Access Denied<br/>Akses Ditolak| ADMIN
+    P31 -->|Access Granted<br/>Akses Diterima| P32
+
+    %% CSRF Token Verification
+    P32 -->|Verify CSRF Token<br/>POST requests only| DS2
+    DS2 -->|Token Validation<br/>Validasi Token| P32
+    P32 -->|Invalid Token<br/>Token Invalid| ADMIN
+    P32 -->|Valid Token<br/>Token Valid| P33
+    P32 -->|Valid Token<br/>Token Valid| P34
+    P32 -->|No Token Needed<br/>GET/DELETE| P35
+    P32 -->|No Token Needed<br/>GET only| P36
+
+    %% Create Entry Process
+    P33 -->|Insert New Entry<br/>INSERT INTO guest_entries<br/>- visitor_name<br/>- ktp_number<br/>- phone_number<br/>- institution<br/>- job<br/>- required_info<br/>- legal_product_purpose| DS1
+    DS1 -->|Insert Result<br/>Success/Duplicate Error| P33
+    P33 -->|Create Response<br/>Success/Error Message| ADMIN
+
+    %% Update Entry Process
+    P34 -->|Get Entry for Edit<br/>SELECT by ID| DS1
+    DS1 -->|Entry Data<br/>Data untuk Edit| P34
+    P34 -->|Update Entry<br/>UPDATE guest_entries<br/>SET fields WHERE id| DS1
+    DS1 -->|Update Result<br/>Rows Affected| P34
+    P34 -->|Update Response<br/>Success/Error Message| ADMIN
+
+    %% Delete Entry Process
+    P35 -->|Delete Entry<br/>DELETE FROM guest_entries<br/>WHERE id = param| DS1
+    DS1 -->|Delete Result<br/>Rows Affected| P35
+    P35 -->|Delete Response<br/>Success/Error Message| ADMIN
+
+    %% Retrieve Entry Data
+    P36 -->|Query Entries<br/>- Recent entries<br/>- All entries<br/>- Single entry| DS1
+    DS1 -->|Entry Dataset<br/>Data Entries| P36
+    P36 -->|Display Data<br/>Dashboard/List View| ADMIN

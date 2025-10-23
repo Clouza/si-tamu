@@ -1,0 +1,101 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entities
+    ADMIN[Admin<br/>Administrator]
+
+    %% Level 1 Processes - Admin Management
+    P1((1.0<br/>Admin<br/>Authentication<br/>Autentikasi Admin))
+    P2((2.0<br/>Generate<br/>Dashboard<br/>Buat Dashboard))
+    P3((3.0<br/>Manage Guest<br/>Entries<br/>Kelola Data Tamu))
+    P4((4.0<br/>Generate<br/>Statistics<br/>Buat Statistik))
+    P5((5.0<br/>Export<br/>Data<br/>Ekspor Data))
+    P6((6.0<br/>User<br/>Management<br/>Kelola User))
+
+    %% Data Stores
+    DS1[(D1 Guest Entries<br/>Data Tamu)]
+    DS2[(D2 Users<br/>Data User)]
+    DS3[(D3 Session Data<br/>Data Sesi)]
+
+    %% Top-to-bottom flow organization
+    ADMIN --> P1
+    P1 --> P2
+    P2 --> P4
+    P4 --> DS1
+    ADMIN --> P3
+    P3 --> DS1
+    ADMIN --> P5
+    P5 --> DS1
+    ADMIN --> P6
+    P6 --> DS2
+    P1 --> DS2
+    P1 --> DS3
+
+    %% Authentication Flow
+    ADMIN -->|Login Credentials<br/>NIP and Password| P1
+    P1 -->|Verify Credentials<br/>Verifikasi| DS2
+    DS2 -->|User Data<br/>Data User| P1
+    P1 -->|Create Session<br/>Buat Sesi| DS3
+    P1 -->|Auth Success/Fail<br/>Sukses/Gagal Login| ADMIN
+
+    %% Dashboard Generation
+    P1 -->|Authenticated User<br/>User Terotentikasi| P2
+    P2 -->|Request Statistics<br/>Minta Statistik| P4
+    P4 -->|Get Entry Data<br/>Ambil Data| DS1
+    DS1 -->|Entry Statistics<br/>Statistik Data| P4
+    P4 -->|Statistics<br/>Statistik| P2
+    P2 -->|Dashboard<br/>Dashboard| ADMIN
+
+    %% Guest Entry Management
+    ADMIN -->|CRUD Commands<br/>Perintah CRUD| P3
+    P3 -->|Verify Session<br/>Verifikasi Sesi| DS3
+    DS3 -->|Session Valid<br/>Sesi Valid| P3
+    P3 -->|Update/Delete/Add<br/>Update/Hapus/Tambah| DS1
+    DS1 -->|Operation Result<br/>Hasil Operasi| P3
+    P3 -->|Operation Response<br/>Respon Operasi| ADMIN
+
+    %% Export Process
+    ADMIN -->|Export Request<br/>Permintaan Ekspor| P5
+    P5 -->|Get All Data<br/>Ambil Semua Data| DS1
+    DS1 -->|Complete Dataset<br/>Dataset Lengkap| P5
+    P5 -->|Export File CSV/Excel<br/>File Ekspor| ADMIN
+
+    %% User Management
+    ADMIN -->|User Management<br/>Kelola User| P6
+    P6 -->|Create/Update User<br/>Buat/Update User| DS2
+    DS2 -->|User Operation Result<br/>Hasil Operasi User| P6
+    P6 -->|User Management Response<br/>Respon Kelola User| ADMIN

@@ -1,0 +1,78 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entities
+    GUEST[Guest/Visitor<br/>Pengunjung]
+
+    %% Level 1 Processes - Guest Registration
+    P1((1.0<br/>Guest Form<br/>Display<br/>Tampil Form Tamu))
+    P2((2.0<br/>Validate Guest<br/>Data<br/>Validasi Data Tamu))
+    P3((3.0<br/>Store Guest<br/>Entry<br/>Simpan Data Tamu))
+    P4((4.0<br/>Generate<br/>Confirmation<br/>Buat Konfirmasi))
+
+    %% Data Stores
+    DS1[(D1 Guest Entries<br/>Data Tamu)]
+    DS2[(D2 Session Data<br/>Data Sesi)]
+
+    %% Top-to-bottom flow organization
+    GUEST --> P1
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> GUEST
+    P2 --> DS2
+    P3 --> DS1
+
+    %% Data Flows - Guest Input
+    GUEST -->|Request Form<br/>Minta Form| P1
+    P1 -->|Guest Form<br/>Form Tamu| GUEST
+    GUEST -->|Guest Data<br/>- Name/Nama<br/>- KTP Number<br/>- Phone/Telepon<br/>- Institution/Instansi<br/>- Job/Pekerjaan<br/>- Required Info<br/>- Purpose/Tujuan| P2
+
+    %% Validation Process
+    P2 -->|Valid Data<br/>Data Valid| P3
+    P2 -->|Validation Errors<br/>Error Validasi| GUEST
+    P2 -->|Check Session<br/>Cek Sesi| DS2
+    DS2 -->|Session Info<br/>Info Sesi| P2
+
+    %% Storage Process
+    P3 -->|Store Entry<br/>Simpan Data| DS1
+    DS1 -->|Storage Confirmation<br/>Konfirmasi Simpan| P3
+    P3 -->|Success/Error<br/>Sukses/Error| P4
+
+    %% Confirmation Process
+    P4 -->|Success Message<br/>Pesan Sukses| GUEST
+    P4 -->|Error Message<br/>Pesan Error| GUEST

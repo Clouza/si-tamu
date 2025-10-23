@@ -1,0 +1,92 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entity
+    ADMIN[Admin<br/>Administrator]
+
+    %% Level 2 Processes - Statistics Generation (4.0)
+    P41((4.1<br/>Calculate<br/>Today's Count<br/>Hitung Hari Ini))
+    P42((4.2<br/>Generate 7-Day<br/>Statistics<br/>Statistik 7 Hari))
+    P43((4.3<br/>Calculate<br/>Total Entries<br/>Hitung Total))
+    P44((4.4<br/>Get Recent<br/>Entries<br/>Ambil Data Terbaru))
+    P45((4.5<br/>Compile<br/>Dashboard Stats<br/>Kompilasi Dashboard))
+
+    %% Data Stores
+    DS1[(D1 Guest Entries<br/>Data Tamu)]
+
+    %% Top-to-bottom flow organization
+    ADMIN --> P41
+    P41 --> P42
+    P41 --> P43
+    P41 --> P44
+    P42 --> P45
+    P43 --> P45
+    P44 --> P45
+    P45 --> ADMIN
+    P41 --> DS1
+    P42 --> DS1
+    P43 --> DS1
+    P44 --> DS1
+
+    %% Request from Dashboard
+    ADMIN -->|Request Statistics<br/>Minta Statistik| P41
+
+    %% Today's Count Calculation
+    P41 -->|Count Today's Visitors<br/>SELECT COUNT<br/>WHERE DATE created_at = today| DS1
+    DS1 -->|Today's Count<br/>Jumlah Hari Ini| P41
+    P41 -->|Today Result<br/>Hasil Hari Ini| P45
+
+    %% 7-Day Statistics
+    P41 -->|Trigger 7-Day Calc<br/>Trigger Hitung 7 Hari| P42
+    P42 -->|Query Each Day<br/>FOR i = 6 to 0<br/>SELECT COUNT<br/>WHERE DATE = date-i| DS1
+    DS1 -->|Daily Counts<br/>Jumlah Harian<br/>- Date<br/>- Day Name<br/>- Short Date<br/>- Count| P42
+    P42 -->|7-Day Statistics<br/>Statistik 7 Hari| P45
+
+    %% Total Entries Count
+    P41 -->|Trigger Total Calc<br/>Trigger Hitung Total| P43
+    P43 -->|Count All Entries<br/>SELECT COUNT<br/>FROM guest_entries| DS1
+    DS1 -->|Total Count<br/>Total Keseluruhan| P43
+    P43 -->|Total Result<br/>Hasil Total| P45
+
+    %% Recent Entries
+    P41 -->|Trigger Recent<br/>Trigger Data Terbaru| P44
+    P44 -->|Get Recent Entries<br/>SELECT * ORDER BY created_at DESC<br/>LIMIT 5 or 100| DS1
+    DS1 -->|Recent Entry List<br/>- ID<br/>- visitor_name<br/>- institution<br/>- created_at<br/>- Other fields| P44
+    P44 -->|Recent Data<br/>Data Terbaru| P45
+
+    %% Compile Dashboard
+    P45 -->|Compiled Statistics<br/>- Today: count<br/>- 7-Day: array<br/>- Total: count<br/>- Recent: array| ADMIN

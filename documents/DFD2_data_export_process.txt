@@ -1,0 +1,93 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entity
+    ADMIN[Admin<br/>Administrator]
+
+    %% Level 2 Processes - Data Export (5.0)
+    P51((5.1<br/>Validate<br/>Export Request<br/>Validasi Permintaan))
+    P52((5.2<br/>Retrieve<br/>All Data<br/>Ambil Semua Data))
+    P53((5.3<br/>Format CSV<br/>Data<br/>Format Data CSV))
+    P54((5.4<br/>Format Excel<br/>Data<br/>Format Data Excel))
+    P55((5.5<br/>Generate<br/>File Headers<br/>Buat Header File))
+    P56((5.6<br/>Send File<br/>Download<br/>Kirim File))
+
+    %% Data Stores
+    DS1[(D1 Guest Entries<br/>Data Tamu)]
+    DS2[(D2 Session Data<br/>Data Sesi)]
+
+    %% Top-to-bottom flow organization
+    ADMIN --> P51
+    P51 --> P52
+    P52 --> P53
+    P52 --> P54
+    P53 --> P55
+    P54 --> P55
+    P55 --> P56
+    P56 --> ADMIN
+    P51 --> DS2
+    P52 --> DS1
+
+    %% Export Request
+    ADMIN -->|Export Request<br/>CSV or Excel| P51
+
+    %% Request Validation
+    P51 -->|Check Admin Session<br/>Cek Sesi Admin| DS2
+    DS2 -->|Session Valid<br/>Sesi Valid| P51
+    P51 -->|Invalid Session<br/>Sesi Invalid| ADMIN
+    P51 -->|Valid Request<br/>Permintaan Valid| P52
+
+    %% Data Retrieval
+    P52 -->|Query All Entries<br/>SELECT * FROM guest_entries<br/>ORDER BY created_at DESC| DS1
+    DS1 -->|Complete Dataset<br/>- ID<br/>- visitor_name<br/>- ktp_number<br/>- phone_number<br/>- institution<br/>- job<br/>- required_info<br/>- legal_product_purpose<br/>- created_at| P52
+
+    %% Format Decision
+    P52 -->|Data Retrieved<br/>Data Diperoleh| P53
+    P52 -->|Data Retrieved<br/>Data Diperoleh| P54
+
+    %% CSV Formatting
+    P53 -->|CSV Format<br/>- UTF-8 BOM<br/>- Headers<br/>- Data Rows| P55
+
+    %% Excel Formatting
+    P54 -->|Excel Format<br/>- HTML Table<br/>- UTF-8 Encoding<br/>- Excel Headers| P55
+
+    %% File Header Generation
+    P55 -->|Generate Headers<br/>Content-Type<br/>Content-Disposition<br/>Filename with timestamp| P56
+
+    %% File Download
+    P56 -->|Download File<br/>data_kunjungan_YYYY-MM-DD_HH-mm-ss<br/>.csv or .xls| ADMIN
+    P56 -->|Export Error<br/>Error Ekspor| ADMIN

@@ -1,0 +1,92 @@
+---
+config:
+  layout: elk
+  theme:
+    primaryColor: "#000000"
+    primaryTextColor: "#000000"
+    primaryBorderColor: "#000000"
+    lineColor: "#000000"
+    sectionBkColor: "#ffffff"
+    altSectionBkColor: "#ffffff"
+    gridColor: "#000000"
+    tertiaryColor: "#ffffff"
+    background: "#ffffff"
+    mainBkg: "#ffffff"
+    secondBkg: "#ffffff"
+    tertiaryTextColor: "#000000"
+---
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'sectionBkColor': '#ffffff',
+    'altSectionBkColor': '#ffffff',
+    'gridColor': '#000000',
+    'tertiaryColor': '#ffffff',
+    'background': '#ffffff',
+    'mainBkg': '#ffffff',
+    'secondBkg': '#ffffff',
+    'fontSize': '25px',
+    'tertiaryTextColor': '#000000'
+  }
+}}%%
+
+flowchart TD
+    %% External Entity
+    GUEST[Guest/Visitor<br/>Pengunjung]
+
+    %% Level 2 Processes - Guest Data Validation (2.0)
+    P21((2.1<br/>Check Required<br/>Fields<br/>Cek Field Wajib))
+    P22((2.2<br/>Validate Field<br/>Length<br/>Validasi Panjang))
+    P23((2.3<br/>Validate Phone<br/>Number<br/>Validasi No Telepon))
+    P24((2.4<br/>Check Duplicate<br/>KTP<br/>Cek Duplikasi KTP))
+    P25((2.5<br/>Check User<br/>Session<br/>Cek Sesi User))
+    P26((2.6<br/>Compile<br/>Validation Result<br/>Kompilasi Hasil))
+
+    %% Data Stores
+    DS1[(D1 Guest Entries<br/>Data Tamu)]
+    DS2[(D2 Session Data<br/>Data Sesi)]
+
+    %% Top-to-bottom flow organization
+    GUEST --> P21
+    P21 --> P22
+    P22 --> P23
+    P23 --> P24
+    P24 --> P25
+    P25 --> P26
+    P26 --> GUEST
+    P24 --> DS1
+    P25 --> DS2
+
+    %% Input Data Flow
+    GUEST -->|Guest Form Data<br/>- nama<br/>- noktp<br/>- notelp<br/>- instansi<br/>- pekerjaan<br/>- informasi<br/>- tujuan| P21
+
+    %% Required Fields Check
+    P21 -->|Required Fields Check<br/>Cek Field Wajib| P22
+    P21 -->|Missing Fields Error<br/>Error Field Kosong| GUEST
+
+    %% Length Validation
+    P22 -->|Length Valid<br/>Panjang Valid| P23
+    P22 -->|Length Error<br/>- Name < 2 chars<br/>- Phone < 10 chars| GUEST
+
+    %% Phone Validation
+    P23 -->|Phone Valid<br/>Telepon Valid| P24
+    P23 -->|Phone Invalid<br/>Telepon Invalid| GUEST
+
+    %% Duplicate Check
+    P24 -->|Check Existing KTP<br/>Cek KTP Exist| DS1
+    DS1 -->|KTP Search Result<br/>Hasil Pencarian KTP| P24
+    P24 -->|No Duplicate<br/>Tidak Ada Duplikasi| P25
+    P24 -->|Duplicate Found<br/>Ditemukan Duplikasi| GUEST
+
+    %% Session Check
+    P25 -->|Check Session<br/>Cek Sesi| DS2
+    DS2 -->|Session Status<br/>Status Sesi| P25
+    P25 -->|Session Valid<br/>Sesi Valid| P26
+
+    %% Validation Result
+    P26 -->|Validation Success<br/>Data Valid untuk Disimpan| GUEST
+    P26 -->|Compilation Error<br/>Error Kompilasi| GUEST
